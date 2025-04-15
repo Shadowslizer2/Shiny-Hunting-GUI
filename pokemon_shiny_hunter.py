@@ -609,15 +609,19 @@ class ShinyCounter:
         details.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
 
         if pokemon_data.method:
+            formatted_number = "{:,}".format(pokemon_data.encounters)
+            ttk.Label(details, text=f"Encounters: {formatted_number}").grid(row=0, column=0, sticky="w")
+
+        if pokemon_data.method:
             odds = self.calculate_shiny_odds(pokemon_data)
             probability = 1 - ((odds - 1) / odds) ** pokemon_data.encounters
-            ttk.Label(details, text=f"Shiny Chance: {probability:.2%} (1/{odds:,})").grid(row=0, column=0, sticky="w")
+            ttk.Label(details, text=f"Shiny Chance: {probability:.2%} (1/{odds:,})").grid(row=1, column=0, sticky="w")
 
         if pokemon_data.game:
-            ttk.Label(details, text=f"Game: {pokemon_data.game}").grid(row=1, column=0, sticky="w")
+            ttk.Label(details, text=f"Game: {pokemon_data.game}").grid(row=2, column=0, sticky="w")
 
-        if pokemon_data.notes:
-            ttk.Label(details, text=f"Notes: {pokemon_data.notes}").grid(row=2, column=0, sticky="w")
+        if pokemon_data.last_updated:
+            ttk.Label(details, text=f"Completed: {pokemon_data.last_updated}").grid(row=3, column=0, sticky="w")
 
         # Buttons frame
         buttons = ttk.Frame(card)

@@ -130,22 +130,35 @@
             "method": "Random Encounter",
             "shiny_chance": null
         },
-        "lileep": {
-            "name": "lileep",
-            "encounters": 24,
+        "anorith": {
+            "name": "anorith",
+            "encounters": 320,
+            "adjustment": 10,
+            "sprite_url": "cache\\sprites\\anorith_150x150.png",
+            "last_updated": "2025-04-12 15:46:59",
+            "status": "HuntStatus.COMPLETE",
+            "found_date": null,
+            "game": "HeartGold/SoulSilver",
+            "notes": null,
+            "method": "Soft Reset",
+            "shiny_chance": null
+        },
+        "combee": {
+            "name": "combee",
+            "encounters": 4732,
             "adjustment": 24,
-            "sprite_url": null,
-            "last_updated": "2025-04-11 09:01:58",
+            "sprite_url": "cache\\sprites\\combee_150x150.png",
+            "last_updated": "2025-04-14 22:33:23",
             "status": "HuntStatus.ACTIVE",
             "found_date": null,
             "game": "HeartGold/SoulSilver",
             "notes": null,
-            "method": "Random Encounter",
+            "method": "Soft Reset",
             "shiny_chance": null
         }
     },
     "active_hunts": [
-        "lileep"
+        "combee"
     ],
-    "last_pokemon": "Eevee"
+    "last_pokemon": "combee"
 }
