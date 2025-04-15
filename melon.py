@@ -19,10 +19,12 @@ except:
     print("Warning: Virtual controller not available - will use keyboard fallback")
 
 # Global variables
+MELON_PATH = r"F:\Important Documents\Nintendo\Desmume\melonDS.exe"
+ROMS_DIR = r"F:\Important Documents\Nintendo\Desmume\Roms"
 processes = []
 windows = []
-NUM_EMULATORS = 24  # Default number of emulators, can be changed
-ROWS = 3  # Number of rows to arrange emulators in
+NUM_EMULATORS = 24
+ROWS = 3
 
 
 class EmulatorController:
@@ -162,7 +164,7 @@ class EmulatorController:
 
     def get_recent_rom_and_sav(self):
         """Find most recent .sav file and its corresponding .nds file"""
-        roms_dir = r"F:\Important Documents\Nintendo\Desmume\Roms"
+        roms_dir = ROMS_DIR  # Updated to use global variable
 
         if not os.path.exists(roms_dir):
             messagebox.showerror("Error", "ROMs directory not found")
@@ -245,21 +247,7 @@ class EmulatorController:
 
     def press_start(self):
         """Press Start button (Button 8)"""
-        self.press_button(8, 0.3)
-
-    def set_axis(self, axis, value, duration=0.1):
-        """Set axis value with automatic reset after duration"""
-        if CONTROLLER_AVAILABLE:
-            try:
-                if axis == 1:
-                    controller.set_axis(pyvjoy.HID_USAGE_X, value)
-                elif axis == 2:
-                    controller.set_axis(pyvjoy.HID_USAGE_Y, value)
-
-                # Reset after duration
-                self.root.after(int(duration * 1000), lambda: self.reset_axis(axis))
-            except Exception as e:
-                self.update_status(f"Controller error: {e}")
+        self.press_button(8)
 
     def reset_axis(self, axis):
         """Reset axis to center position"""
@@ -272,49 +260,57 @@ class EmulatorController:
             except Exception as e:
                 self.update_status(f"Controller error: {e}")
 
-    def move_left(self):
+    def hold_axis(self, axis, value, hold_time):
+        """New function: Hold axis for specified duration"""
+        if CONTROLLER_AVAILABLE:
+            try:
+                if axis == 1:
+                    controller.set_axis(pyvjoy.HID_USAGE_X, value)
+                elif axis == 2:
+                    controller.set_axis(pyvjoy.HID_USAGE_Y, value)
+
+                time.sleep(hold_time)
+                self.reset_axis(axis)
+            except Exception as e:
+                self.update_status(f"Controller error: {e}")
+
+    def set_axis(self, axis, value, duration=0.05):  # Updated default duration
+        """Set axis value with automatic reset after duration"""
+        self.hold_axis(axis, value, duration)  # Reuse new function
+
+    def move_left(self, duration=0.05):
         """Move Left (Axis 1-) - single press"""
-        self.set_axis(1, 0x0000)  # Full left
+        self.set_axis(1, 0x0000, duration)  # Full left
         self.update_status("Moving Left (single press)")
 
-    def move_right(self):
+    def move_right(self, duration=0.05):
         """Move Right (Axis 1+) - single press"""
-        self.set_axis(1, 0x8000)  # Full right
+        self.set_axis(1, 0x8000, duration)  # Full right
         self.update_status("Moving Right (single press)")
 
-    def move_up(self):
+    def move_up(self, duration=0.05):
         """Move Up (Axis 2-) - single press"""
-        self.set_axis(2, 0x0000)  # Full up
+        self.set_axis(2, 0x0000, duration)  # Full up
         self.update_status("Moving Up (single press)")
 
-    def move_down(self):
+    def move_down(self, duration=0.05):
         """Move Down (Axis 2+) - single press"""
-        self.set_axis(2, 0x8000)  # Full down
+        self.set_axis(2, 0x8000, duration)  # Full down
         self.update_status("Moving Down (single press)")
 
     def tap_left(self, duration=0.05):
-        """Quick Left tap (Axis 1-) - press and release"""
-        self.set_axis(1, 0x0000)  # Full left
-        time.sleep(duration)
-        self.set_axis(1, 0x4000)  # Center position (release)
+        """Updated to use hold_axis"""
+        self.hold_axis(1, 0x0000, duration)
 
+    # Update all other tap_* functions similarly to use hold_axis:
     def tap_right(self, duration=0.05):
-        """Quick Right tap (Axis 1+) - press and release"""
-        self.set_axis(1, 0x8000)  # Full right
-        time.sleep(duration)
-        self.set_axis(1, 0x4000)  # Center position (release)
+        self.hold_axis(1, 0x8000, duration)
 
     def tap_up(self, duration=0.05):
-        """Quick Up tap (Axis 2-) - press and release"""
-        self.set_axis(2, 0x0000)  # Full up
-        time.sleep(duration)
-        self.set_axis(2, 0x4000)  # Center position (release)
+        self.hold_axis(2, 0x0000, duration)
 
     def tap_down(self, duration=0.05):
-        """Quick Down tap (Axis 2+) - press and release"""
-        self.set_axis(2, 0x8000)  # Full down
-        time.sleep(duration)
-        self.set_axis(2, 0x4000)  # Center position (release)
+        self.hold_axis(2, 0x8000, duration)
 
     def toggle_fast_forward(self):
         """Toggle Fast Forward state"""
@@ -326,9 +322,9 @@ class EmulatorController:
 
     def test_inputs(self):
         """Test button that taps left twice"""
-        self.tap_left()
+        self.move_left()
         time.sleep(0.1)
-        self.tap_left()
+        self.move_left()
 
     def execute_soft_reset(self):
         """Standard soft reset sequence"""
@@ -348,20 +344,20 @@ class EmulatorController:
     def execute_run_away(self):
         """Standard run away sequence without increment"""
         self.press_a()
-        time.sleep(0.1)
+        time.sleep(0.05)
         self.tap_down()
-        time.sleep(0.1)
+        time.sleep(0.05)
         self.tap_right()
-        time.sleep(0.1)
+        time.sleep(0.05)
         self.press_a()
         time.sleep(5.6)  # Wait for battle to end
 
     def navigate_to_summary(self, slot=6):
         """Navigate to pokemon summary for given slot (1-6)"""
         self.press_x()
-        time.sleep(0.1)
+        time.sleep(0.05)
         self.tap_down()
-        time.sleep(0.1)
+        time.sleep(0.05)
         self.press_a()
         time.sleep(1.25)  # Wait for menu to open
 
@@ -752,10 +748,9 @@ class EmulatorController:
         num_emulators = self.num_emulators_var.get()
         rows = self.rows_var.get()
         cols = (num_emulators + rows - 1) // rows  # Calculate columns needed
-
         self.update_status(f"Opening {num_emulators} emulators in {rows} rows...")
 
-        melon_path = r"F:\Important Documents\Nintendo\Desmume\melonDS.exe"
+        melon_path = MELON_PATH  # Updated to use global variable
 
         if not os.path.exists(melon_path):
             messagebox.showerror("Error", "melonDS.exe not found")
