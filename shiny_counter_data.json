@@ -143,12 +143,25 @@
             "method": "Soft Reset",
             "shiny_chance": null
         },
+        "slakoth": {
+            "name": "slakoth",
+            "encounters": 5764,
+            "adjustment": 24,
+            "sprite_url": "cache\\sprites\\slakoth_150x150.png",
+            "last_updated": "2025-04-15 10:13:21",
+            "status": "HuntStatus.COMPLETE",
+            "found_date": null,
+            "game": "HeartGold/SoulSilver",
+            "notes": null,
+            "method": "Soft Reset",
+            "shiny_chance": null
+        },
         "combee": {
             "name": "combee",
-            "encounters": 4732,
+            "encounters": 0,
             "adjustment": 24,
-            "sprite_url": "cache\\sprites\\combee_150x150.png",
-            "last_updated": "2025-04-14 22:33:23",
+            "sprite_url": null,
+            "last_updated": "2025-04-15 10:33:02",
             "status": "HuntStatus.ACTIVE",
             "found_date": null,
             "game": "HeartGold/SoulSilver",
