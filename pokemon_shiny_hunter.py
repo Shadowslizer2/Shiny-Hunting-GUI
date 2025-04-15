@@ -44,27 +44,12 @@ class PokemonData:
 
 
 @dataclass
-class RouteData:
-    name: str
-    game: str
-    location: str
-    method: str
-    encounters: int = 0
-    pokemon: Dict[str, float] = None  # {pokemon_name: encounter_rate}
-    status: HuntStatus = HuntStatus.ACTIVE
-    last_updated: Optional[str] = None
-
-
-@dataclass
 class AppData:
     pokemon: Dict[str, PokemonData]
-    routes: Dict[str, RouteData] = None
     active_hunts: List[str] = None
     last_pokemon: Optional[str] = None
 
     def __post_init__(self):
-        if self.routes is None:
-            self.routes = {}
         if self.active_hunts is None:
             self.active_hunts = []
 
@@ -108,15 +93,6 @@ class Config:
         "Other"
     ]
 
-    ENCOUNTER_METHODS = {
-        "Grass": "Land",
-        "Surfing": "Water",
-        "Fishing": "Water",
-        "Headbutt": "Headbutt",
-        "Cave": "Cave",
-        "Special": "Special"
-    }
-
     COLORS = {
         'primary': '#3D7DCA',
         'secondary': '#FFCB05',
@@ -146,10 +122,6 @@ class ShinyCounter:
         self.current_game = tk.StringVar()
         self.current_method = tk.StringVar(value=Config.HUNT_METHODS[0])
         self.image_references = []
-
-        self.current_route = tk.StringVar()
-        self.route_method = tk.StringVar()
-        self.route_pokemon = {}
 
         self.communication_files = {
             'emulator_count': "melon_emulator_count.txt",
@@ -215,14 +187,6 @@ class ShinyCounter:
         ttk.Label(game_frame, text="Game:").pack(side=tk.LEFT)
         game_menu = ttk.OptionMenu(game_frame, self.current_game, *Config.POKEMON_GAMES.keys())
         game_menu.pack(side=tk.LEFT, padx=5)
-
-        route_frame = ttk.Frame(control_frame)
-        route_frame.pack(fill=tk.X, pady=5)
-
-        ttk.Label(route_frame, text="Route:").pack(side=tk.LEFT)
-        self.route_selector = ttk.Combobox(route_frame, textvariable=self.current_route)
-        self.route_selector.pack(side=tk.LEFT, padx=5)
-        ttk.Button(route_frame, text="New Route", command=self.setup_route).pack(side=tk.LEFT)
 
         method_frame = ttk.Frame(control_frame)
         method_frame.pack(fill=tk.X, pady=5)
@@ -676,65 +640,6 @@ class ShinyCounter:
         self.check_emulator_count()
         self.check_encounter_trigger()
         self.root.after(500, self.setup_file_watcher)
-
-    def setup_route(self):
-        popup = tk.Toplevel(self.root)
-        popup.title("New Route Setup")
-
-        # Route configuration inputs
-        ttk.Label(popup, text="Location Name:").grid(row=0, column=0)
-        loc_entry = ttk.Entry(popup)
-        loc_entry.grid(row=0, column=1)
-
-        ttk.Label(popup, text="Game Version:").grid(row=1, column=0)
-        game_combo = ttk.Combobox(popup, values=list(Config.POKEMON_GAMES.keys()))
-        game_combo.grid(row=1, column=1)
-
-        ttk.Label(popup, text="Encounter Method:").grid(row=2, column=0)
-        method_combo = ttk.Combobox(popup, values=list(Config.ENCOUNTER_METHODS.keys()))
-        method_combo.grid(row=2, column=1)
-
-        def create_route():
-            location = loc_entry.get()
-            game = game_combo.get()
-            method = method_combo.get()
-
-            if not all([location, game, method]):
-                messagebox.showerror("Error", "All fields are required")
-                return
-
-            try:
-                # Fetch encounter data from PokeAPI
-                encounters = self.get_route_encounters(location, game)
-                route_name = f"{location} ({method})"
-
-                self.saved_data.routes[route_name] = RouteData(
-                    name=route_name,
-                    game=game,
-                    location=location,
-                    method=method,
-                    pokemon=encounters
-                )
-                self.current_route.set(route_name)
-                self.update_route_display()
-                popup.destroy()
-            except Exception as e:
-                messagebox.showerror("API Error", f"Failed to get encounters: {str(e)}")
-
-        ttk.Button(popup, text="Create", command=create_route).grid(row=3, columnspan=2)
-
-    def get_route_encounters(self, location, game):
-        # Get location data from PokeAPI
-        response = requests.get(f"{Config.API_BASE_URL}/location-area/{location.lower()}")
-        data = response.json()
-
-        encounters = {}
-        for encounter in data.get('pokemon_encounters', []):
-            for version in encounter.get('version_details', []):
-                if version.get('version', {}).get('name') == game.lower():
-                    encounters[encounter['pokemon']['name']] = version.get('chance', 0)
-
-        return encounters
 
     def check_emulator_count(self):
         try:
