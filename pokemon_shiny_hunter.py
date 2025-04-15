@@ -1,6 +1,4 @@
-import time
 import tkinter as tk
-from collections import deque
 from tkinter import ttk, simpledialog, messagebox, filedialog
 import json
 import os
@@ -14,7 +12,6 @@ import requests
 from io import BytesIO
 from datetime import datetime
 from dataclasses import dataclass, asdict
-from enum import Enum
 
 # Constants
 CACHE_DIR = Path("cache/sprites")
@@ -120,6 +117,7 @@ class ShinyCounter:
             'encounter_trigger': "encounter_trigger.txt"
         }
         self.last_trigger_time = 0
+        self.initial_load = True
 
         CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -258,36 +256,23 @@ class ShinyCounter:
             messagebox.showerror("Error", f"Could not load data: {e}")
             self.saved_data = AppData(pokemon={})
 
-    def save_data(self):
+    def save_data(self) -> None:
         try:
             active_hunts = [name for name, data in self.saved_data.pokemon.items()
-                            if data.status == "ACTIVE"]  # Direct string comparison
+                            if data.status == "ACTIVE"]
 
             data = {
-                "pokemon": {
-                    k: {
-                        "name": v.name,
-                        "encounters": v.encounters,
-                        "adjustment": v.adjustment,
-                        "sprite_url": v.sprite_url,
-                        "last_updated": v.last_updated,
-                        "status": v.status,  # Already a string
-                        "found_date": v.found_date,
-                        "game": v.game,
-                        "notes": v.notes,
-                        "method": v.method
-                    } for k, v in self.saved_data.pokemon.items()
-                },
+                "pokemon": {k: asdict(v) for k, v in self.saved_data.pokemon.items()},
                 "active_hunts": active_hunts,
                 "last_pokemon": self.saved_data.last_pokemon
             }
 
-            with open(self.storage_file, 'w') as f:
+            with open(self.storage_file, 'w', encoding='utf-8') as f:  # Added encoding
                 json.dump(data, f, indent=4, default=str)
         except Exception as e:
             messagebox.showerror("Error", f"Could not save data: {e}")
 
-    def load_pokemon(self, pokemon_name: str):
+    def load_pokemon(self, pokemon_name: str) -> None:
         try:
             pokemon_name = pokemon_name.lower()
             self.current_pokemon = pokemon_name
@@ -430,7 +415,7 @@ class ShinyCounter:
         self.save_pokemon_data()
         self.update_hunts_panel()
 
-    def save_pokemon_data(self):
+    def save_pokemon_data(self) -> None:
         if not self.current_pokemon:
             return
 
@@ -626,10 +611,10 @@ class ShinyCounter:
             self.save_data()
             self.update_hunts_panel()
 
-    def initialize_communication_files(self):
+    def initialize_communication_files(self) -> None:
         for filepath in self.communication_files.values():
             if not os.path.exists(filepath):
-                with open(filepath, 'w') as f:
+                with open(filepath, 'w', encoding='utf-8') as f:  # Added encoding
                     f.write("16" if "emulator_count" in filepath else "0")
 
     def setup_file_watcher(self):
@@ -653,17 +638,18 @@ class ShinyCounter:
             mod_time = os.path.getmtime(self.communication_files['encounter_trigger'])
             if mod_time > self.last_trigger_time:
                 self.last_trigger_time = mod_time
-                if not self.initial_load:  # Only adjust if not initial load
+                if hasattr(self, 'initial_load') and not self.initial_load:  # Safe check
                     self.adjust_number("increase")
         except Exception as e:
             print(f"Error checking encounter trigger: {e}")
         finally:
-            self.initial_load = False  # Set to False after first check
+            if hasattr(self, 'initial_load'):
+                self.initial_load = False
 
-    def export_data(self):
+    def export_data(self) -> None:
         file_path = filedialog.asksaveasfilename(defaultextension=".json", filetypes=[("JSON files", "*.json")])
         if file_path:
-            with open(file_path, 'w') as f:
+            with open(file_path, 'w', encoding='utf-8') as f:  # Added encoding
                 data = asdict(self.saved_data)
                 data['pokemon'] = {k: asdict(v) for k, v in data['pokemon'].items()}
                 json.dump(data, f, indent=4)
