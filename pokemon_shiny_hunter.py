@@ -21,13 +21,6 @@ CACHE_DIR = Path("cache/sprites")
 DATA_FILE = "shiny_counter_data.json"
 DEFAULT_SPRITE_URL = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/0.png"
 
-
-class HuntStatus(Enum):
-    ACTIVE = "Active"
-    COMPLETE = "Complete"
-    PAUSED = "Paused"
-
-
 @dataclass
 class PokemonData:
     name: str
@@ -35,12 +28,11 @@ class PokemonData:
     adjustment: int = 1
     sprite_url: Optional[str] = None
     last_updated: Optional[str] = None
-    status: HuntStatus = HuntStatus.ACTIVE
+    status: str = "ACTIVE"
     found_date: Optional[str] = None
     game: Optional[str] = None
     notes: Optional[str] = None
     method: Optional[str] = None
-    shiny_chance: Optional[float] = None
 
 
 @dataclass
@@ -251,15 +243,6 @@ class ShinyCounter:
                     pokemon_dict = {}
                     for k, v in loaded_data.get('pokemon', {}).items():
                         try:
-                            if 'status' in v:
-                                # Handle both old string format and new value format
-                                status_str = v['status']
-                                if status_str.startswith('HuntStatus.'):
-                                    status_str = status_str.split('.')[
-                                        1]  # Extract "COMPLETE" from "HuntStatus.COMPLETE"
-                                v['status'] = HuntStatus[status_str]
-                            else:
-                                v['status'] = HuntStatus.COMPLETE if v.get('complete', False) else HuntStatus.ACTIVE
                             pokemon_dict[k] = PokemonData(**v)
                         except Exception as e:
                             print(f"Skipping invalid Pokémon entry {k}: {e}")
@@ -278,9 +261,23 @@ class ShinyCounter:
     def save_data(self):
         try:
             active_hunts = [name for name, data in self.saved_data.pokemon.items()
-                            if data.status == HuntStatus.ACTIVE]
+                            if data.status == "ACTIVE"]  # Direct string comparison
+
             data = {
-                "pokemon": {k: asdict(v) for k, v in self.saved_data.pokemon.items()},
+                "pokemon": {
+                    k: {
+                        "name": v.name,
+                        "encounters": v.encounters,
+                        "adjustment": v.adjustment,
+                        "sprite_url": v.sprite_url,
+                        "last_updated": v.last_updated,
+                        "status": v.status,  # Already a string
+                        "found_date": v.found_date,
+                        "game": v.game,
+                        "notes": v.notes,
+                        "method": v.method
+                    } for k, v in self.saved_data.pokemon.items()
+                },
                 "active_hunts": active_hunts,
                 "last_pokemon": self.saved_data.last_pokemon
             }
@@ -447,7 +444,7 @@ class ShinyCounter:
                 game=self.current_game.get(),
                 method=self.current_method.get(),
                 last_updated=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                status=HuntStatus.ACTIVE
+                status="ACTIVE"  # Using string directly
             )
         else:
             data = self.saved_data.pokemon[self.current_pokemon]
@@ -527,11 +524,11 @@ class ShinyCounter:
     def create_hunt_card(self, pokemon_name: str, pokemon_data: PokemonData):
         card = ttk.Frame(self.hunts_frame, style='Card.TFrame', padding=10)
 
-        status = HuntStatus(pokemon_data.status)
+        status = pokemon_data.status  # Now using the string directly
         status_color = {
-            HuntStatus.COMPLETE: Config.COLORS['complete'],
-            HuntStatus.PAUSED: Config.COLORS['paused'],
-            HuntStatus.ACTIVE: Config.COLORS['primary']
+            "COMPLETE": Config.COLORS['complete'],
+            "PAUSED": Config.COLORS['paused'],
+            "ACTIVE": Config.COLORS['primary']
         }.get(status)
 
         # Header frame
@@ -543,19 +540,15 @@ class ShinyCounter:
         img_frame.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
 
         try:
-            # Check if we have a local cached file
             if pokemon_data.sprite_url and os.path.exists(pokemon_data.sprite_url):
-                # Load from local file
                 img = Image.open(pokemon_data.sprite_url)
             else:
-                # Fall back to default URL
                 response = requests.get(DEFAULT_SPRITE_URL)
                 img = Image.open(BytesIO(response.content))
 
             img = img.resize(Config.CARD_SPRITE_SIZE, Image.Resampling.LANCZOS)
             photo_img = ImageTk.PhotoImage(img)
             self.image_references.append(photo_img)
-
             img_label = ttk.Label(img_frame, image=photo_img)
             img_label.image = photo_img
             img_label.pack()
@@ -566,15 +559,14 @@ class ShinyCounter:
         name_frame = ttk.Frame(header)
         name_frame.pack(side=tk.LEFT)
         ttk.Label(name_frame, text=pokemon_name.capitalize(), font=('Arial', 12, 'bold')).pack(side=tk.LEFT)
-        ttk.Label(name_frame, text=f"• {status.value}", foreground=status_color).pack(side=tk.LEFT, padx=5)
+        ttk.Label(name_frame, text=f"• {status}", foreground=status_color).pack(side=tk.LEFT, padx=5)
 
         # Details frame
         details = ttk.Frame(card)
         details.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
 
-        if pokemon_data.method:
-            formatted_number = "{:,}".format(pokemon_data.encounters)
-            ttk.Label(details, text=f"Encounters: {formatted_number}").grid(row=0, column=0, sticky="w")
+        formatted_number = "{:,}".format(pokemon_data.encounters)
+        ttk.Label(details, text=f"Encounters: {formatted_number}").grid(row=0, column=0, sticky="w")
 
         if pokemon_data.method:
             odds = self.calculate_shiny_odds(pokemon_data)
@@ -584,8 +576,9 @@ class ShinyCounter:
         if pokemon_data.game:
             ttk.Label(details, text=f"Game: {pokemon_data.game}").grid(row=2, column=0, sticky="w")
 
-        if pokemon_data.last_updated:
-            ttk.Label(details, text=f"Completed: {pokemon_data.last_updated}").grid(row=3, column=0, sticky="w")
+        # Show found date if completed, otherwise don't show anything
+        if status == "COMPLETE" and pokemon_data.found_date:
+            ttk.Label(details, text=f"Found: {pokemon_data.found_date}").grid(row=3, column=0, sticky="w")
 
         # Buttons frame
         buttons = ttk.Frame(card)
@@ -596,9 +589,9 @@ class ShinyCounter:
                                                                                                             padx=2)
         ttk.Button(buttons, text="Notes", command=lambda p=pokemon_name: self.add_notes(p), style='Secondary.TButton',
                    width=8).grid(row=0, column=1, padx=2)
-        ttk.Button(buttons, text="✓" if status == HuntStatus.COMPLETE else "▶",
+        ttk.Button(buttons, text="✓" if status == "COMPLETE" else "▶",
                    command=lambda p=pokemon_name: self.toggle_hunt_status(p),
-                   style='Success.TButton' if status == HuntStatus.COMPLETE else 'TButton',
+                   style='Success.TButton' if status == "COMPLETE" else 'TButton',
                    width=8).grid(row=0, column=2, padx=2)
 
         return card
@@ -607,12 +600,15 @@ class ShinyCounter:
         pokemon_name = pokemon_name.lower()
         if pokemon_name in self.saved_data.pokemon:
             current_status = self.saved_data.pokemon[pokemon_name].status
-            new_status = HuntStatus.COMPLETE if current_status != HuntStatus.COMPLETE else HuntStatus.ACTIVE
+            new_status = "COMPLETE" if current_status != "COMPLETE" else "ACTIVE"
             self.saved_data.pokemon[pokemon_name].status = new_status
+
+            if new_status == "COMPLETE" and not self.saved_data.pokemon[pokemon_name].found_date:
+                self.saved_data.pokemon[pokemon_name].found_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
             self.save_data()
 
-            # Update active hunts list
-            if new_status == HuntStatus.ACTIVE:
+            if new_status == "ACTIVE":
                 if pokemon_name not in self.saved_data.active_hunts:
                     self.saved_data.active_hunts.append(pokemon_name)
             else:
