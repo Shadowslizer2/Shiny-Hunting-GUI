@@ -79,6 +79,10 @@ class EmulatorController:
                                                                                                            column=2,
                                                                                                            padx=5,
                                                                                                            pady=5)
+        Button(main_frame, text="Fossil Reset", command=self.fossil_sequence, height=2, width=20).grid(row=2,
+                                                                                                       column=2,
+                                                                                                       padx=5,
+                                                                                                       pady=5)
         Button(main_frame, text="Sweet Scent", command=self.sweet_scent_sequence, height=2, width=20).grid(row=0,
                                                                                                           column=3,
                                                                                                           padx=5,
@@ -87,6 +91,10 @@ class EmulatorController:
                                                                                                            column=3,
                                                                                                            padx=5,
                                                                                                            pady=5)
+        Button(main_frame, text="Headbutt", command=self.headbutt, height=2, width=20).grid(row=2,
+                                                                                           column=3,
+                                                                                           padx=5,
+                                                                                           pady=5)
 
         # DS Controller Layout Frame
         ds_frame = Frame(root)
@@ -483,6 +491,97 @@ class EmulatorController:
 
         self.update_status("Eevee sequence completed")
 
+
+    def fossil_sequence(self):
+        """Perform soft reset, wait 6 seconds, then press Start button"""
+        num_emulators = self.num_emulators_var.get()
+        self.update_status(f"Starting Fossil sequence for {num_emulators} emulators...")
+
+        # Update emulator count file immediately
+        self.update_emulator_count_file()
+
+        # Get all melonDS windows
+        self.find_melonds_windows()
+
+        if not windows:
+            messagebox.showwarning("Warning", "No melonDS windows found")
+            return
+
+        # First pass: soft reset all windows individually
+        for hwnd in windows:
+            try:
+                self.soft_reset(hwnd)
+            except Exception as e:
+                print(f"Error resetting window {hwnd}: {e}")
+
+        # Reset + A
+        self.update_status("Waiting 8.5 seconds...")
+        time.sleep(8.5)
+        self.update_status("Sending Start button to all instances...")
+        self.press_start()
+
+        self.update_status("Waiting 1.75 seconds...")
+        time.sleep(1.75)
+        self.update_status("Sending Start button to all instances...")
+        self.press_start()
+
+        self.update_status("Waiting 3 seconds...")
+        time.sleep(3)
+        self.update_status("Sending A button to all instances...")
+        self.press_a()
+
+        self.update_status("Waiting 3 seconds...")
+        time.sleep(3)
+        self.update_status("Sending A button to all instances...")
+        self.press_a()
+
+        # Talk to Person
+
+        time.sleep(.5)
+        self.update_status("Sending A button to all instances...")
+        self.press_a()
+
+        time.sleep(1)
+        self.update_status("Sending A button to all instances...")
+        self.press_a()
+
+        time.sleep(1)
+        self.update_status("Sending A button to all instances...")
+        self.press_a()
+
+        self.update_status("Waiting 6 seconds...")
+        time.sleep(6)
+        self.update_status("Sending B button to all instances...")
+        self.press_b()
+
+        # Open Pokemon Summary
+        self.update_status("Waiting 1 seconds...")
+        time.sleep(1)
+        self.update_status("Sending x button to all instances...")
+        self.press_x()
+
+        time.sleep(0.1)
+        self.tap_down()
+
+        time.sleep(0.1)
+        self.press_a()
+
+        self.update_status("Waiting 1.25 seconds...")
+        time.sleep(1.25)
+        self.update_status("Moving to Fossil all instances...")
+        self.tap_right()
+
+        time.sleep(0.1)
+        self.press_a()
+
+        time.sleep(0.25)
+        self.press_a()
+
+        # Trigger shiny hunter increment at the end
+        self.trigger_shinyhunter_increment()
+
+        self.update_status("Fossil sequence completed")
+
     def snorlax_sequence(self):
         """Perform Sweet Scent set up sequence """
         num_emulators = self.num_emulators_var.get()
@@ -661,6 +760,49 @@ class EmulatorController:
         self.trigger_shinyhunter_increment()
 
         self.update_status("Simple Reset sequence completed")
+
+    def headbutt(self):
+        num_emulators = self.num_emulators_var.get()
+        self.update_status(f"Starting Headbutt sequence for {num_emulators} emulators...")
+
+        # Update emulator count file immediately
+        self.update_emulator_count_file()
+
+        # Get all melonDS windows
+        self.find_melonds_windows()
+
+        if not windows:
+            messagebox.showwarning("Warning", "No melonDS windows found")
+            return
+
+        self.press_a()
+
+        self.update_status("Waiting .1 seconds...")
+        time.sleep(.1)
+        self.move_down()
+
+        self.update_status("Waiting .1 seconds...")
+        time.sleep(.1)
+        self.move_right()
+
+        self.update_status("Waiting .1 seconds...")
+        time.sleep(.1)
+        self.press_a()
+
+        self.update_status("Waiting 5.5 seconds...")
+        time.sleep(5.4)
+        self.press_a()
+
+        time.sleep(1.4)
+        self.press_a()
+
+        time.sleep(1)
+        self.press_a()
+
+        # Trigger shiny hunter increment at the end
+        self.trigger_shinyhunter_increment()
+
+        self.update_status("Headbutt sequence completed")
 
     def run_away(self):
         num_emulators = self.num_emulators_var.get()
