@@ -9,8 +9,6 @@ import pyvjoy
 import keyboard
 from tkinter import *
 from tkinter import messagebox
-import tkinter as tk
-from tkinter import ttk
 
 # Initialize virtual controller
 try:
@@ -30,6 +28,7 @@ ROWS = 3  # Number of rows to arrange emulators in
 class EmulatorController:
     def __init__(self, root):
         self.root = root
+        self.is_running = False  # Lock to prevent overlapping sequences
         root.title("MelonDS Controller")
         root.geometry("800x600")
 
@@ -52,49 +51,48 @@ class EmulatorController:
         self.rows_var = IntVar(value=ROWS)
         Spinbox(config_frame, from_=1, to=4, textvariable=self.rows_var, width=5).pack(side=LEFT, padx=5)
 
-        # Create main control buttons
-        Button(main_frame, text="Open Emulators", command=self.open_emulators, height=2, width=20).grid(row=0, column=0,
-                                                                                                        padx=5, pady=5)
-        Button(main_frame, text="Close All Emulators", command=self.close_emulators, height=2, width=20).grid(row=1,
-                                                                                                              column=0,
-                                                                                                              padx=5,
-                                                                                                              pady=5)
-        Button(main_frame, text="Sudowoodo Reset", command=self.sudowoodo_sequence, height=2, width=20).grid(row=0,
-                                                                                                                column=1,
-                                                                                                                padx=5,
-                                                                                                                pady=5)
-        Button(main_frame, text="Eevee Reset", command=self.eevee_sequence, height=2, width=20).grid(row=1,
-                                                                                                             column=1,
-                                                                                                             padx=5,
-                                                                                                             pady=5)
-        Button(main_frame, text="Snorlax Reset", command=self.snorlax_sequence, height=2, width=20).grid(row=2,
-                                                                                                     column=1,
-                                                                                                     padx=5,
-                                                                                                     pady=5)
-        Button(main_frame, text="Simple Reset", command=self.simple_reset_sequence, height=2, width=20).grid(row=1,
-                                                                                                             column=2,
-                                                                                                             padx=5,
-                                                                                                             pady=5)
-        Button(main_frame, text="Run Away", command=self.run_away, height=2, width=20).grid(row=0,
-                                                                                                           column=2,
-                                                                                                           padx=5,
-                                                                                                           pady=5)
-        Button(main_frame, text="Fossil Reset", command=self.fossil_sequence, height=2, width=20).grid(row=2,
-                                                                                                       column=2,
-                                                                                                       padx=5,
-                                                                                                       pady=5)
-        Button(main_frame, text="Sweet Scent", command=self.sweet_scent_sequence, height=2, width=20).grid(row=0,
-                                                                                                          column=3,
-                                                                                                          padx=5,
-                                                                                                          pady=5)
-        Button(main_frame, text="Sweet Scent Start Up", command=self.sweet_scent_set_up, height=2, width=20).grid(row=1,
-                                                                                                           column=3,
-                                                                                                           padx=5,
-                                                                                                           pady=5)
-        Button(main_frame, text="Headbutt", command=self.headbutt, height=2, width=20).grid(row=2,
-                                                                                           column=3,
-                                                                                           padx=5,
-                                                                                           pady=5)
+        # Create main control frame
+        control_frame = Frame(root)
+        control_frame.pack(pady=10)
+
+        # Left side - Vertical stack of system controls
+        left_frame = Frame(control_frame)
+        left_frame.pack(side=LEFT, padx=20)
+
+        Button(left_frame, text="Open Emulators", command=self.open_emulators,
+               height=2, width=20, bg='#dcedc1', fg='black').grid(row=0, column=0, padx=5, pady=5)
+        Button(left_frame, text="Close All Emulators", command=self.close_emulators,
+               height=2, width=20, bg='#ffaaa5', fg='black').grid(row=1, column=0, padx=5, pady=5)
+        Button(left_frame, text="Test Inputs", command=self.test_inputs,
+               height=2, width=20, bg='#a8e6cf').grid(row=2, column=0, padx=5, pady=5)
+
+        # Right side - Hunting sequences in 3x3 grid
+        right_frame = Frame(control_frame)
+        right_frame.pack(side=LEFT, padx=20)
+
+        # Row 0
+        Button(right_frame, text="Sudowoodo Reset", command=self.sudowoodo_sequence,
+               height=2, width=20).grid(row=0, column=0, padx=5, pady=5)
+        Button(right_frame, text="Run Away", command=self.run_away,
+               height=2, width=20).grid(row=0, column=1, padx=5, pady=5)
+        Button(right_frame, text="Sweet Scent", command=self.sweet_scent_sequence,
+               height=2, width=20).grid(row=0, column=2, padx=5, pady=5)
+
+        # Row 1
+        Button(right_frame, text="Eevee Reset", command=self.eevee_sequence,
+               height=2, width=20).grid(row=1, column=0, padx=5, pady=5)
+        Button(right_frame, text="Simple Reset", command=self.simple_reset_sequence,
+               height=2, width=20).grid(row=1, column=1, padx=5, pady=5)
+        Button(right_frame, text="Sweet Scent Start Up", command=self.sweet_scent_set_up,
+               height=2, width=20).grid(row=1, column=2, padx=5, pady=5)
+
+        # Row 2
+        Button(right_frame, text="Snorlax Reset", command=self.snorlax_sequence,
+               height=2, width=20).grid(row=2, column=0, padx=5, pady=5)
+        Button(right_frame, text="Fossil Reset", command=self.fossil_sequence,
+               height=2, width=20).grid(row=2, column=1, padx=5, pady=5)
+        Button(right_frame, text="Headbutt", command=self.headbutt,
+               height=2, width=20).grid(row=2, column=2, padx=5, pady=5)
 
         # DS Controller Layout Frame
         ds_frame = Frame(root)
@@ -126,7 +124,7 @@ class EmulatorController:
         ff_frame = Frame(ds_frame)
         ff_frame.grid(row=0, column=2, padx=10)
         self.ff_button = Button(ff_frame, text="Fast Forward", command=self.toggle_fast_forward,
-                                height=3, width=15, bg='orange', fg='black')
+                                height=3, width=15, bg='#ffd3b6', fg='black')
         self.ff_button.pack()
         self.ff_state = False
 
@@ -212,7 +210,6 @@ class EmulatorController:
                 controller.set_button(button_num, 1)
                 time.sleep(duration)
                 controller.set_button(button_num, 0)
-                self.update_status(f"Button {button_num} pressed ({duration*1000}ms)")
             except Exception as e:
                 self.update_status(f"Controller error: {e}")
         else:
@@ -298,665 +295,428 @@ class EmulatorController:
     def tap_left(self, duration=0.05):
         """Quick Left tap (Axis 1-) - press and release"""
         self.set_axis(1, 0x0000)  # Full left
-        self.update_status("Tapping Left")
         time.sleep(duration)
         self.set_axis(1, 0x4000)  # Center position (release)
 
     def tap_right(self, duration=0.05):
         """Quick Right tap (Axis 1+) - press and release"""
         self.set_axis(1, 0x8000)  # Full right
-        self.update_status("Tapping Right")
         time.sleep(duration)
         self.set_axis(1, 0x4000)  # Center position (release)
 
     def tap_up(self, duration=0.05):
         """Quick Up tap (Axis 2-) - press and release"""
         self.set_axis(2, 0x0000)  # Full up
-        self.update_status("Tapping Up")
         time.sleep(duration)
         self.set_axis(2, 0x4000)  # Center position (release)
 
     def tap_down(self, duration=0.05):
         """Quick Down tap (Axis 2+) - press and release"""
         self.set_axis(2, 0x8000)  # Full down
-        self.update_status("Tapping Down")
         time.sleep(duration)
         self.set_axis(2, 0x4000)  # Center position (release)
 
     def toggle_fast_forward(self):
-        """Toggle Fast Forward state with pyvjoy debugging info"""
+        """Toggle Fast Forward state"""
         self.ff_state = not self.ff_state
-
         if CONTROLLER_AVAILABLE:
-            try:
-                print("\n[VJoy Controller Debug]")
+            controller.set_button(9, 1 if self.ff_state else 0)
+        self.ff_button.config(bg='#dcedc1' if self.ff_state else '#ffd3b6')
+        self.update_status(f"Fast Forward {'ON' if self.ff_state else 'OFF'}")
 
-                # Try to get some basic info about pyvjoy
-                print(f"Pyvjoy available: {hasattr(pyvjoy, '__version__')}")
-
-                # Print device capabilities from constants
-                print("\nDevice Capabilities (from pyvjoy constants):")
-                print(f"Max buttons: {getattr(pyvjoy.constants, 'VJOY_MAX_NUMBER_OF_BUTTONS', 'Unknown')}")
-                print(f"Max axes: {getattr(pyvjoy.constants, 'VJOY_MAX_NUMBER_OF_ANALOG', 'Unknown')}")
-                print(f"Max hats: {getattr(pyvjoy.constants, 'VJOY_MAX_NUMBER_OF_HATS', 'Unknown')}")
-
-                # Show our intended action
-                print(f"\nAttempting to set button 9 to: {self.ff_state}")
-
-                # Set button 9
-                controller.set_button(9, 1 if self.ff_state else 0)
-                self.ff_button.config(bg='green' if self.ff_state else 'orange')
-
-                status_msg = f"Fast Forward {'ON' if self.ff_state else 'OFF'} (Button 9)"
-                self.update_status(status_msg)
-                print(f"\n{status_msg}")
-
-            except Exception as e:
-                error_msg = f"VJoy Error: {str(e)}"
-                self.update_status(error_msg)
-                print(error_msg)
-                print(f"Exception type: {type(e).__name__}")
-                if hasattr(e, 'args'):
-                    print(f"Error details: {e.args}")
-        else:
-            error_msg = "VJoy Controller not initialized"
-            self.update_status(error_msg)
-            print(error_msg)
-            
-    def eevee_sequence(self):
-        """Perform soft reset, wait 6 seconds, then press Start button"""
-        num_emulators = self.num_emulators_var.get()
-        self.update_status(f"Starting Eevee sequence for {num_emulators} emulators...")
-
-        # Update emulator count file immediately
-        self.update_emulator_count_file()
-
-        # Get all melonDS windows
-        self.find_melonds_windows()
-
-        if not windows:
-            messagebox.showwarning("Warning", "No melonDS windows found")
-            return
-
-        # First pass: soft reset all windows individually
-        for hwnd in windows:
-            try:
-                self.soft_reset(hwnd)
-            except Exception as e:
-                print(f"Error resetting window {hwnd}: {e}")
-
-        # Reset + A
-        self.update_status("Waiting 8.5 seconds...")
-        time.sleep(8.5)
-        self.update_status("Sending Start button to all instances...")
-        self.press_start()
-
-        self.update_status("Waiting 1.75 seconds...")
-        time.sleep(1.75)
-        self.update_status("Sending Start button to all instances...")
-        self.press_start()
-
-        self.update_status("Waiting 3 seconds...")
-        time.sleep(3)
-        self.update_status("Sending A button to all instances...")
-        self.press_a()
-
-        self.update_status("Waiting 3 seconds...")
-        time.sleep(3)
-        self.update_status("Sending A button to all instances...")
-        self.press_a()
-
-        # Talk to Bill
-        self.update_status("Waiting 1 seconds...")
-        time.sleep(1)
-        self.update_status("Sending A button to all instances...")
-        self.press_a()
-
-        self.update_status("Waiting 1 seconds...")
-        time.sleep(1)
-        self.update_status("Sending A button to all instances...")
-        self.press_a()
-
-        self.update_status("Waiting 1 seconds...")
-        time.sleep(1)
-        self.update_status("Sending A button to all instances...")
-        self.press_a()
-
-        self.update_status("Waiting 1 seconds...")
-        time.sleep(1)
-        self.update_status("Sending A button to all instances...")
-        self.press_a()
-
-        self.update_status("Waiting 1.7 seconds...")
-        time.sleep(1.7)
-        self.update_status("Sending A button to all instances...")
-        self.press_a()
-
-        self.update_status("Waiting 0.5 seconds...")
-        time.sleep(0.5)
-        self.update_status("Sending A button to all instances...")
-        self.press_a()
-
-        self.update_status("Waiting 0.5 seconds...")
-        time.sleep(0.5)
-        self.update_status("Sending A button to all instances...")
-        self.press_a()
-
-        self.update_status("Waiting 6 seconds...")
-        time.sleep(6)
-        self.update_status("Sending B button to all instances...")
-        self.press_b()
-
-        self.update_status("Waiting 1.5 seconds...")
-        time.sleep(1.5)
-        self.update_status("Sending A button to all instances...")
-        self.press_a()
-
-        self.update_status("Waiting 0.5 seconds...")
-        time.sleep(0.5)
-        self.update_status("Sending A button to all instances...")
-        self.press_a()
-
-        # Open Pokemon Summary
-        self.update_status("Waiting 0.5 seconds...")
-        time.sleep(0.5)
-        self.update_status("Sending x button to all instances...")
-        self.press_x()
-
+    def test_inputs(self):
+        """Test button that taps left twice"""
+        self.tap_left()
         time.sleep(0.1)
-        self.tap_down()
-
-        time.sleep(0.1)
-        self.press_a()
-
-        self.update_status("Waiting 1.25 seconds...")
-        time.sleep(1.5)
-        self.update_status("Moving to Eevee all instances...")
         self.tap_left()
 
-        time.sleep(.1)
-        self.tap_up()
-
-        time.sleep(.1)
-        self.tap_right()
-
-        time.sleep(0.1)
-        self.press_a()
-
-        time.sleep(0.25)
-        self.press_a()
-
-        # Trigger shiny hunter increment at the end
-        self.trigger_shinyhunter_increment()
-
-        self.update_status("Eevee sequence completed")
-
-
-    def fossil_sequence(self):
-        """Perform soft reset, wait 6 seconds, then press Start button"""
-        num_emulators = self.num_emulators_var.get()
-        self.update_status(f"Starting Fossil sequence for {num_emulators} emulators...")
-
-        # Update emulator count file immediately
-        self.update_emulator_count_file()
-
-        # Get all melonDS windows
-        self.find_melonds_windows()
-
-        if not windows:
-            messagebox.showwarning("Warning", "No melonDS windows found")
-            return
-
-        # First pass: soft reset all windows individually
+    def execute_soft_reset(self):
+        """Standard soft reset sequence"""
+        self.update_status("Performing soft reset...")
         for hwnd in windows:
-            try:
-                self.soft_reset(hwnd)
-            except Exception as e:
-                print(f"Error resetting window {hwnd}: {e}")
+            self.soft_reset(hwnd)
 
-        # Reset + A
-        self.update_status("Waiting 8.5 seconds...")
         time.sleep(8.5)
-        self.update_status("Sending Start button to all instances...")
         self.press_start()
-
-        self.update_status("Waiting 1.75 seconds...")
         time.sleep(1.75)
-        self.update_status("Sending Start button to all instances...")
         self.press_start()
-
-        self.update_status("Waiting 3 seconds...")
         time.sleep(3)
-        self.update_status("Sending A button to all instances...")
         self.press_a()
-
-        self.update_status("Waiting 3 seconds...")
         time.sleep(3)
-        self.update_status("Sending A button to all instances...")
         self.press_a()
 
-        # Talk to Person
-
-        time.sleep(.5)
-        self.update_status("Sending A button to all instances...")
+    def execute_run_away(self):
+        """Standard run away sequence without increment"""
         self.press_a()
-
-        time.sleep(1)
-        self.update_status("Sending A button to all instances...")
-        self.press_a()
-
-        time.sleep(1)
-        self.update_status("Sending A button to all instances...")
-        self.press_a()
-
-        self.update_status("Waiting 6 seconds...")
-        time.sleep(6)
-        self.update_status("Sending B button to all instances...")
-        self.press_b()
-
-        # Open Pokemon Summary
-        self.update_status("Waiting 1 seconds...")
-        time.sleep(1)
-        self.update_status("Sending x button to all instances...")
-        self.press_x()
-
         time.sleep(0.1)
         self.tap_down()
-
         time.sleep(0.1)
-        self.press_a()
-
-        self.update_status("Waiting 1.25 seconds...")
-        time.sleep(1.25)
-        self.update_status("Moving to Fossil all instances...")
         self.tap_right()
-
         time.sleep(0.1)
         self.press_a()
+        time.sleep(5.6)  # Wait for battle to end
 
+    def navigate_to_summary(self, slot=6):
+        """Navigate to pokemon summary for given slot (1-6)"""
+        self.press_x()
+        time.sleep(0.1)
+        self.tap_down()
+        time.sleep(0.1)
+        self.press_a()
+        time.sleep(1.25)  # Wait for menu to open
+
+        # Calculate moves based on slot position
+        moves = []
+        if slot == 6:
+            moves = ['left', 'up', 'right']
+        elif slot == 5:
+            moves = ['left', 'up']
+        elif slot == 4:
+            moves = ['right', 'down']
+        elif slot == 3:
+            moves = ['down']
+        elif slot == 2:
+            moves = ['right']
+
+        for direction in moves:
+            getattr(self, f"tap_{direction}")()
+            time.sleep(0.1)
+
+        self.press_a()
         time.sleep(0.25)
         self.press_a()
 
-        # Trigger shiny hunter increment at the end
-        self.trigger_shinyhunter_increment()
-
-        self.update_status("Fossil sequence completed")
-
-    def snorlax_sequence(self):
-        """Perform Sweet Scent set up sequence """
-        num_emulators = self.num_emulators_var.get()
-        self.update_status(f"Starting Snorlax sequence for {num_emulators} emulators...")
-        self.update_emulator_count_file()
-        self.find_melonds_windows()
-
-        if not windows:
-            messagebox.showwarning("Warning", "No melonDS windows found")
+    def eevee_sequence(self):
+        if self.is_running:
             return
 
-        # First pass: soft reset all windows individually
-        for hwnd in windows:
-            try:
-                self.soft_reset(hwnd)
-            except Exception as e:
-                print(f"Error resetting window {hwnd}: {e}")
+        self.is_running = True
+        try:
+            num_emulators = self.num_emulators_var.get()
+            self.update_status(f"Starting Eevee sequence for {num_emulators} emulators...")
+            self.update_emulator_count_file()
+            self.find_melonds_windows()
 
-        # Button Presses
-        time.sleep(8.5)
-        self.update_status("Sending Start button to all instances...")
-        self.press_start()
+            if not windows:
+                messagebox.showwarning("Warning", "No melonDS windows found")
+                return
 
-        time.sleep(1.75)
-        self.update_status("Sending Start button to all instances...")
-        self.press_start()
+            # Soft reset
+            self.execute_soft_reset()
 
-        time.sleep(3)
-        self.update_status("Sending A button to all instances...")
-        self.press_a()
+            # Talk to Bill
+            time.sleep(1)
+            self.press_a()
+            time.sleep(1)
+            self.press_a()
+            time.sleep(1)
+            self.press_a()
+            time.sleep(1)
+            self.press_a()
+            time.sleep(1.7)
+            self.press_a()
+            time.sleep(0.5)
+            self.press_a()
+            time.sleep(0.5)
+            self.press_a()
+            time.sleep(6)
+            self.press_b()
+            time.sleep(1.5)
+            self.press_a()
+            time.sleep(0.5)
+            self.press_a()
 
-        time.sleep(3)
-        self.update_status("Sending X button to all instances...")
-        self.press_x()
-
-        time.sleep(.1)
-        self.tap_up()
-
-        time.sleep(.1)
-        self.press_a()
-
-        time.sleep(1)
-        self.press_b()
-
-        time.sleep(1.75)
-        self.press_b()
-
-        time.sleep(.1)
-        self.press_a()
-
-        time.sleep(.15)
-        self.press_a()
-
-        time.sleep(.4)
-        self.press_a()
-
-        self.trigger_shinyhunter_increment()
-        self.update_status("Snorlax sequence completed")
+            # Check summary
+            self.navigate_to_summary(6)
+            self.trigger_shinyhunter_increment()
+            self.update_status("Eevee sequence completed")
+        finally:
+            self.is_running = False
 
     def sudowoodo_sequence(self):
-        """Perform soft reset, wait 6 seconds, then press Start button"""
-        num_emulators = self.num_emulators_var.get()
-        self.update_status(f"Starting Sudowoodo sequence for {num_emulators} emulators...")
-
-        # Update emulator count file immediately
-        self.update_emulator_count_file()
-
-        # Get all melonDS windows
-        self.find_melonds_windows()
-
-        if not windows:
-            messagebox.showwarning("Warning", "No melonDS windows found")
+        if self.is_running:
             return
 
-        # First pass: soft reset all windows individually
-        for hwnd in windows:
-            try:
-                self.soft_reset(hwnd)
-            except Exception as e:
-                print(f"Error resetting window {hwnd}: {e}")
+        self.is_running = True
+        try:
+            num_emulators = self.num_emulators_var.get()
+            self.update_status(f"Starting Sudowoodo sequence for {num_emulators} emulators...")
+            self.update_emulator_count_file()
+            self.find_melonds_windows()
 
-        # Button Presses
-        self.update_status("Waiting 9 seconds...")
-        time.sleep(9)
-        self.update_status("Sending Start button to all instances...")
-        self.press_start()
+            if not windows:
+                messagebox.showwarning("Warning", "No melonDS windows found")
+                return
 
-        self.update_status("Waiting 2 seconds...")
-        time.sleep(2)
-        self.update_status("Sending Start button to all instances...")
-        self.press_start()
+            # Soft reset
+            self.execute_soft_reset()
 
-        self.update_status("Waiting 3.5 seconds...")
-        time.sleep(3.5)
-        self.update_status("Sending A button to all instances...")
-        self.press_a()
+            # Interact with Sudowoodo
+            time.sleep(3.5)
+            self.press_a()
+            time.sleep(4)
+            self.press_a()
+            time.sleep(3)
+            self.press_a()
+            time.sleep(2)
+            self.press_a()
+            time.sleep(3.5)
+            self.press_a()
+            time.sleep(0.5)
+            self.press_a()
 
-        self.update_status("Waiting 4 seconds...")
-        time.sleep(4)
-        self.update_status("Sending A button to all instances...")
-        self.press_a()
+            self.trigger_shinyhunter_increment()
+            self.update_status("Sudowoodo sequence completed")
+        finally:
+            self.is_running = False
 
-        self.update_status("Waiting 3 seconds...")
-        time.sleep(3)
-        self.update_status("Sending A button to all instances...")
-        self.press_a()
+    def snorlax_sequence(self):
+        if self.is_running:
+            return
 
-        self.update_status("Waiting 2 seconds...")
-        time.sleep(2)
-        self.update_status("Sending A button to all instances...")
-        self.press_a()
+        self.is_running = True
+        try:
+            num_emulators = self.num_emulators_var.get()
+            self.update_status(f"Starting Snorlax sequence for {num_emulators} emulators...")
+            self.update_emulator_count_file()
+            self.find_melonds_windows()
 
-        self.update_status("Waiting 3.5 seconds...")
-        time.sleep(3.5)
-        self.update_status("Sending A button to all instances...")
-        self.press_a()
+            if not windows:
+                messagebox.showwarning("Warning", "No melonDS windows found")
+                return
 
-        self.update_status("Waiting 0.5 seconds...")
-        time.sleep(0.5)
-        self.update_status("Sending A button to all instances...")
-        self.press_a()
+            # Soft reset
+            self.execute_soft_reset()
 
-        # Trigger shiny hunter increment at the end
-        self.trigger_shinyhunter_increment()
+            # Menu navigation
+            time.sleep(3.5)
+            self.press_a()
+            time.sleep(4)
+            self.press_x()
+            time.sleep(0.1)
+            self.tap_up()
+            time.sleep(0.1)
+            self.press_a()
+            time.sleep(1)
+            self.press_b()
+            time.sleep(1.75)
+            self.press_b()
+            time.sleep(0.1)
+            self.press_a()
+            time.sleep(0.15)
+            self.press_a()
+            time.sleep(0.4)
+            self.press_a()
 
-        self.update_status("Sudowoodo sequence completed")
-
+            self.trigger_shinyhunter_increment()
+            self.update_status("Snorlax sequence completed")
+        finally:
+            self.is_running = False
 
     def simple_reset_sequence(self):
-        """Perform soft reset, wait 6 seconds, then press Start button"""
-        num_emulators = self.num_emulators_var.get()
-        self.update_status(f"Starting Sudowoodo sequence for {num_emulators} emulators...")
-
-        # Update emulator count file immediately
-        self.update_emulator_count_file()
-
-        # Get all melonDS windows
-        self.find_melonds_windows()
-
-        if not windows:
-            messagebox.showwarning("Warning", "No melonDS windows found")
+        if self.is_running:
             return
 
-        # First pass: soft reset all windows individually
-        for hwnd in windows:
-            try:
-                self.soft_reset(hwnd)
-            except Exception as e:
-                print(f"Error resetting window {hwnd}: {e}")
+        self.is_running = True
+        try:
+            num_emulators = self.num_emulators_var.get()
+            self.update_status(f"Starting Simple Reset sequence for {num_emulators} emulators...")
+            self.update_emulator_count_file()
+            self.find_melonds_windows()
 
-        # Button Presses
-        self.update_status("Waiting 8.75 seconds...")
-        time.sleep(8.5)
-        self.update_status("Sending Start button to all instances...")
-        self.press_start()
+            if not windows:
+                messagebox.showwarning("Warning", "No melonDS windows found")
+                return
 
-        self.update_status("Waiting 1.75 seconds...")
-        time.sleep(1.75)
-        self.update_status("Sending Start button to all instances...")
-        self.press_start()
+            # Soft reset
+            self.execute_soft_reset()
 
-        self.update_status("Waiting 3 seconds...")
-        time.sleep(3)
-        self.update_status("Sending A button to all instances...")
-        self.press_a()
+            # Interact with static pokemon
+            time.sleep(0.15)
+            self.press_a()
 
-        self.update_status("Waiting 3 seconds...")
-        time.sleep(3)
-        self.update_status("Sending A button to all instances...")
-        self.press_a()
+            self.trigger_shinyhunter_increment()
+            self.update_status("Simple Reset sequence completed")
+        finally:
+            self.is_running = False
 
-        time.sleep(.15)
-        self.press_a()
-
-        # Trigger shiny hunter increment at the end
-        self.trigger_shinyhunter_increment()
-
-        self.update_status("Simple Reset sequence completed")
-
-    def headbutt(self):
-        num_emulators = self.num_emulators_var.get()
-        self.update_status(f"Starting Headbutt sequence for {num_emulators} emulators...")
-
-        # Update emulator count file immediately
-        self.update_emulator_count_file()
-
-        # Get all melonDS windows
-        self.find_melonds_windows()
-
-        if not windows:
-            messagebox.showwarning("Warning", "No melonDS windows found")
+    def fossil_sequence(self):
+        if self.is_running:
             return
 
-        self.press_a()
+        self.is_running = True
+        try:
+            num_emulators = self.num_emulators_var.get()
+            self.update_status(f"Starting Fossil sequence for {num_emulators} emulators...")
+            self.update_emulator_count_file()
+            self.find_melonds_windows()
 
-        self.update_status("Waiting .1 seconds...")
-        time.sleep(.1)
-        self.move_down()
+            if not windows:
+                messagebox.showwarning("Warning", "No melonDS windows found")
+                return
 
-        self.update_status("Waiting .1 seconds...")
-        time.sleep(.1)
-        self.move_right()
+            # Soft reset
+            self.execute_soft_reset()
 
-        self.update_status("Waiting .1 seconds...")
-        time.sleep(.1)
-        self.press_a()
+            # Talk to NPC
+            time.sleep(0.5)
+            self.press_a()
+            time.sleep(1)
+            self.press_a()
+            time.sleep(1)
+            self.press_a()
+            time.sleep(6)
+            self.press_b()
 
-        self.update_status("Waiting 5.5 seconds...")
-        time.sleep(5.4)
-        self.press_a()
+            # Check summary
+            time.sleep(1)
+            self.press_x()
+            time.sleep(0.1)
+            self.tap_down()
+            time.sleep(0.1)
+            self.press_a()
+            time.sleep(1.25)
+            self.tap_right()
+            time.sleep(0.1)
+            self.press_a()
+            time.sleep(0.25)
+            self.press_a()
 
-        time.sleep(1.4)
-        self.press_a()
-
-        time.sleep(1)
-        self.press_a()
-
-        # Trigger shiny hunter increment at the end
-        self.trigger_shinyhunter_increment()
-
-        self.update_status("Headbutt sequence completed")
+            self.trigger_shinyhunter_increment()
+            self.update_status("Fossil sequence completed")
+        finally:
+            self.is_running = False
 
     def run_away(self):
-        num_emulators = self.num_emulators_var.get()
-        self.update_status(f"Starting Run Away sequence for {num_emulators} emulators...")
-
-        # Update emulator count file immediately
-        self.update_emulator_count_file()
-
-        # Get all melonDS windows
-        self.find_melonds_windows()
-
-        if not windows:
-            messagebox.showwarning("Warning", "No melonDS windows found")
+        if self.is_running:
             return
 
-        self.press_a()
+        self.is_running = True
+        try:
+            num_emulators = self.num_emulators_var.get()
+            self.update_status(f"Starting Run Away sequence for {num_emulators} emulators...")
+            self.update_emulator_count_file()
+            self.find_melonds_windows()
 
-        self.update_status("Waiting .1 seconds...")
-        time.sleep(.1)
-        self.move_down()
+            if not windows:
+                messagebox.showwarning("Warning", "No melonDS windows found")
+                return
 
-        self.update_status("Waiting .1 seconds...")
-        time.sleep(.1)
-        self.move_right()
+            # Run away
+            self.execute_run_away()
+            self.press_a()
 
-        self.update_status("Waiting .1 seconds...")
-        time.sleep(.1)
-        self.press_a()
-
-        self.update_status("Waiting 5.6 seconds...")
-        time.sleep(5.6)
-        self.press_a()
-
-        # Trigger shiny hunter increment at the end
-        self.trigger_shinyhunter_increment()
-
-        self.update_status("Simple Reset sequence completed")
+            self.trigger_shinyhunter_increment()
+            self.update_status("Run Away sequence completed")
+        finally:
+            self.is_running = False
 
     def sweet_scent_set_up(self):
-        """Perform Sweet Scent set up sequence """
-        num_emulators = self.num_emulators_var.get()
-        self.update_status(f"Starting Sweet Scent Start Up sequence for {num_emulators} emulators...")
-        self.update_emulator_count_file()
-        self.find_melonds_windows()
-
-        if not windows:
-            messagebox.showwarning("Warning", "No melonDS windows found")
+        if self.is_running:
             return
 
-        # First pass: soft reset all windows individually
-        for hwnd in windows:
-            try:
-                self.soft_reset(hwnd)
-            except Exception as e:
-                print(f"Error resetting window {hwnd}: {e}")
+        self.is_running = True
+        try:
+            num_emulators = self.num_emulators_var.get()
+            self.update_status(f"Starting Sweet Scent Start Up sequence for {num_emulators} emulators...")
+            self.update_emulator_count_file()
+            self.find_melonds_windows()
 
-        # Button Presses
-        self.update_status("Waiting 9 seconds...")
-        time.sleep(9)
-        self.update_status("Sending Start button to all instances...")
-        self.press_start()
+            if not windows:
+                messagebox.showwarning("Warning", "No melonDS windows found")
+                return
 
-        self.update_status("Waiting 2 seconds...")
-        time.sleep(2)
-        self.update_status("Sending Start button to all instances...")
-        self.press_start()
+            # Soft reset
+            self.execute_soft_reset()
 
-        self.update_status("Waiting 3.5 seconds...")
-        time.sleep(3.5)
-        self.update_status("Sending A button to all instances...")
-        self.press_a()
+            # Menu navigation
+            time.sleep(3.5)
+            self.press_a()
+            time.sleep(4)
+            self.press_x()
+            time.sleep(0.1)
+            self.tap_down()
+            time.sleep(0.1)
+            self.press_a()
+            time.sleep(1.25)
+            self.tap_down()
+            time.sleep(0.1)
+            self.press_a()
+            time.sleep(0.1)
+            self.tap_left()
+            time.sleep(0.1)
+            self.press_a()
 
-        self.update_status("Waiting 4 seconds...")
-        time.sleep(4)
-        self.update_status("Sending X button to all instances...")
-        self.press_x()
-
-        self.update_status("Waiting .1 seconds...")
-        time.sleep(.1)
-        self.tap_down()
-
-        self.update_status("Waiting .1 seconds...")
-        time.sleep(.1)
-        self.press_a()
-
-        self.update_status("Waiting 1.25 seconds...")
-        time.sleep(1.25)
-        self.tap_down()
-
-        self.update_status("Waiting .1 seconds...")
-        time.sleep(.1)
-        self.press_a()
-
-        self.update_status("Waiting .1 seconds...")
-        time.sleep(.1)
-        self.tap_left()
-
-        self.update_status("Waiting .1 seconds...")
-        time.sleep(.1)
-        self.press_a()
-
-        self.trigger_shinyhunter_increment()
-        self.update_status("Sweet Scent Start Up sequence completed")
+            self.trigger_shinyhunter_increment()
+            self.update_status("Sweet Scent Start Up sequence completed")
+        finally:
+            self.is_running = False
 
     def sweet_scent_sequence(self):
-        num_emulators = self.num_emulators_var.get()
-        self.update_status(f"Starting Sweet Scent sequence for {num_emulators} emulators...")
-        self.update_emulator_count_file()
-        self.find_melonds_windows()
-
-        if not windows:
-            messagebox.showwarning("Warning", "No melonDS windows found")
+        if self.is_running:
             return
 
-        self.press_a()
+        self.is_running = True
+        try:
+            num_emulators = self.num_emulators_var.get()
+            self.update_status(f"Starting Sweet Scent sequence for {num_emulators} emulators...")
+            self.update_emulator_count_file()
+            self.find_melonds_windows()
 
-        self.update_status("Waiting .1 seconds...")
-        time.sleep(.1)
-        self.move_down()
+            if not windows:
+                messagebox.showwarning("Warning", "No melonDS windows found")
+                return
 
-        self.update_status("Waiting .1 seconds...")
-        time.sleep(.1)
-        self.move_right()
+            # Run away
+            self.execute_run_away()
 
-        self.update_status("Waiting .1 seconds...")
-        time.sleep(.1)
-        self.press_a()
+            # Use Sweet Scent
+            self.press_x()
+            time.sleep(0.1)
+            self.press_a()
+            time.sleep(1.25)
+            self.tap_down()
+            time.sleep(0.1)
+            self.press_a()
+            time.sleep(0.1)
+            self.tap_left()
+            time.sleep(0.1)
+            self.press_a()
 
-        self.update_status("Waiting 5.6 seconds...")
-        time.sleep(5.6)
-        self.press_x()
+            self.trigger_shinyhunter_increment()
+            self.update_status("Sweet Scent sequence completed")
+        finally:
+            self.is_running = False
 
-        self.update_status("Waiting .1 seconds...")
-        time.sleep(.1)
-        self.press_a()
+    def headbutt(self):
+        if self.is_running:
+            return
 
-        self.update_status("Waiting 1.25 seconds...")
-        time.sleep(1.25)
-        self.tap_down()
+        self.is_running = True
+        try:
+            num_emulators = self.num_emulators_var.get()
+            self.update_status(f"Starting Headbutt sequence for {num_emulators} emulators...")
+            self.update_emulator_count_file()
+            self.find_melonds_windows()
 
-        self.update_status("Waiting .1 seconds...")
-        time.sleep(.1)
-        self.press_a()
+            if not windows:
+                messagebox.showwarning("Warning", "No melonDS windows found")
+                return
 
-        self.update_status("Waiting .1 seconds...")
-        time.sleep(.1)
-        self.tap_left()
+            # Run away
+            self.execute_run_away()
 
-        self.update_status("Waiting .1 seconds...")
-        time.sleep(.1)
-        self.press_a()
+            # Headbutt tree
+            self.press_a()
+            time.sleep(1.4)
+            self.press_a()
+            time.sleep(1)
+            self.press_a()
 
-        self.trigger_shinyhunter_increment()
-        self.update_status("Sweet Scent sequence completed")
+            self.trigger_shinyhunter_increment()
+            self.update_status("Headbutt sequence completed")
+        finally:
+            self.is_running = False
 
     def update_emulator_count_file(self):
         """Update the emulator count file"""
@@ -1075,6 +835,7 @@ class EmulatorController:
         windows = []
         time.sleep(0.5)
         self.update_status("All emulators closed")
+
 
 if __name__ == "__main__":
     root = Tk()
