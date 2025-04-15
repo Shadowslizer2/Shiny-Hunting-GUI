@@ -1,0 +1,151 @@
+{
+    "pokemon": {
+        "sudowoodo": {
+            "name": "sudowoodo",
+            "encounters": 5969,
+            "adjustment": 16,
+            "sprite_url": "cache\\sprites\\sudowoodo_150x150.png",
+            "last_updated": "2025-03-28 12:59:10",
+            "status": "HuntStatus.COMPLETE",
+            "found_date": "2025-03-28 12:59",
+            "game": "HeartGold/SoulSilver",
+            "notes": null,
+            "method": "Soft Reset",
+            "shiny_chance": 0.35680743188289765
+        },
+        "chikorita": {
+            "name": "chikorita",
+            "encounters": 10300,
+            "adjustment": 12,
+            "sprite_url": "cache\\sprites\\chikorita_150x150.png",
+            "last_updated": "2025-03-27 10:22:39",
+            "status": "HuntStatus.COMPLETE",
+            "found_date": "2025-03-27 00:56",
+            "game": "HeartGold/SoulSilver",
+            "notes": null,
+            "method": "Soft Reset",
+            "shiny_chance": 0.7156077881654235
+        },
+        "rattata": {
+            "name": "rattata",
+            "encounters": 19136,
+            "adjustment": 12,
+            "sprite_url": "cache\\sprites\\rattata_150x150.png",
+            "last_updated": "2025-03-27 10:22:41",
+            "status": "HuntStatus.COMPLETE",
+            "found_date": "2025-03-27 00:55",
+            "game": "HeartGold/SoulSilver",
+            "notes": null,
+            "method": "Random Encounter",
+            "shiny_chance": 0.9032940246635215
+        },
+        "dratini": {
+            "name": "dratini",
+            "encounters": 960,
+            "adjustment": 60,
+            "sprite_url": "cache\\sprites\\dratini_150x150.png",
+            "last_updated": "2025-03-27 10:22:36",
+            "status": "HuntStatus.COMPLETE",
+            "found_date": "2025-03-27 00:56",
+            "game": "HeartGold/SoulSilver",
+            "notes": null,
+            "method": "Soft Reset",
+            "shiny_chance": 0.11058795053526427
+        },
+        "nidoran-m": {
+            "name": "nidoran-m",
+            "encounters": 1776,
+            "adjustment": 16,
+            "sprite_url": "cache\\sprites\\nidoran-m_150x150.png",
+            "last_updated": "2025-03-30 12:58:24",
+            "status": "HuntStatus.COMPLETE",
+            "found_date": null,
+            "game": "HeartGold/SoulSilver",
+            "notes": null,
+            "method": "Random Encounter",
+            "shiny_chance": null
+        },
+        "electrode": {
+            "name": "electrode",
+            "encounters": 14824,
+            "adjustment": 24,
+            "sprite_url": "cache\\sprites\\electrode_150x150.png",
+            "last_updated": "2025-04-01 08:54:29",
+            "status": "HuntStatus.COMPLETE",
+            "found_date": null,
+            "game": "HeartGold/SoulSilver",
+            "notes": null,
+            "method": "Soft Reset",
+            "shiny_chance": null
+        },
+        "eevee": {
+            "name": "eevee",
+            "encounters": 16536,
+            "adjustment": 24,
+            "sprite_url": "cache\\sprites\\eevee_150x150.png",
+            "last_updated": "2025-04-07 18:44:05",
+            "status": "HuntStatus.COMPLETE",
+            "found_date": null,
+            "game": "HeartGold/SoulSilver",
+            "notes": null,
+            "method": "Soft Reset",
+            "shiny_chance": null
+        },
+        "ho-oh": {
+            "name": "ho-oh",
+            "encounters": 1392,
+            "adjustment": 24,
+            "sprite_url": "cache\\sprites\\ho-oh_150x150.png",
+            "last_updated": "2025-04-08 09:18:55",
+            "status": "HuntStatus.COMPLETE",
+            "found_date": null,
+            "game": "HeartGold/SoulSilver",
+            "notes": null,
+            "method": "Soft Reset",
+            "shiny_chance": null
+        },
+        "snorlax": {
+            "name": "snorlax",
+            "encounters": 7680,
+            "adjustment": 24,
+            "sprite_url": "cache\\sprites\\snorlax_150x150.png",
+            "last_updated": "2025-04-10 17:46:52",
+            "status": "HuntStatus.COMPLETE",
+            "found_date": null,
+            "game": "HeartGold/SoulSilver",
+            "notes": null,
+            "method": "Random Encounter",
+            "shiny_chance": null
+        },
+        "suicune": {
+            "name": "suicune",
+            "encounters": 96,
+            "adjustment": 24,
+            "sprite_url": "cache\\sprites\\suicune_150x150.png",
+            "last_updated": "2025-04-11 08:12:27",
+            "status": "HuntStatus.COMPLETE",
+            "found_date": null,
+            "game": "HeartGold/SoulSilver",
+            "notes": null,
+            "method": "Random Encounter",
+            "shiny_chance": null
+        },
+        "lileep": {
+            "name": "lileep",
+            "encounters": 24,
+            "adjustment": 24,
+            "sprite_url": null,
+            "last_updated": "2025-04-11 09:01:58",
+            "status": "HuntStatus.ACTIVE",
+            "found_date": null,
+            "game": "HeartGold/SoulSilver",
+            "notes": null,
+            "method": "Random Encounter",
+            "shiny_chance": null
+        }
+    },
+    "active_hunts": [
+        "lileep"
+    ],
+    "last_pokemon": "Eevee"
+}
