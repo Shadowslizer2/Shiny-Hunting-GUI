@@ -155,10 +155,23 @@
             "game": "HeartGold/SoulSilver",
             "notes": null,
             "method": "Soft Reset"
+        },
+        "slugma": {
+            "name": "slugma",
+            "encounters": 240,
+            "adjustment": 24,
+            "sprite_url": "cache\\sprites\\slugma_150x150.png",
+            "last_updated": "2025-04-15 22:47:55",
+            "status": "ACTIVE",
+            "found_date": null,
+            "game": "HeartGold/SoulSilver",
+            "notes": null,
+            "method": "Soft Reset"
         }
     },
     "active_hunts": [
-        "combee"
+        "combee",
+        "slugma"
     ],
     "last_pokemon": "combee"
 }

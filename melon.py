@@ -79,7 +79,7 @@ class EmulatorController:
                height=2, width=20).grid(row=0, column=1, padx=5, pady=5)
         Button(right_frame, text="Sweet Scent", command=self.sweet_scent_sequence,
                height=2, width=20).grid(row=0, column=2, padx=5, pady=5)
-        Button(right_frame, text="Slugma Egg Reset", command=self.slugma_egg_sequence,
+        Button(right_frame, text="Primo Slugma Reset", command=self.primo_slugma_egg_sequence,
                height=2, width=20).grid(row=0, column=3, padx=5, pady=5)
 
         # Row 1
@@ -352,7 +352,7 @@ class EmulatorController:
         time.sleep(3)
         self.press_a()
         time.sleep(3)
-        #self.press_a()
+        self.press_a()
 
     def execute_run_away(self):
         """Standard run away sequence without increment"""
@@ -549,14 +549,14 @@ class EmulatorController:
         finally:
             self.is_running = False
 
-    def slugma_egg_sequence(self):
+    def primo_slugma_egg_sequence(self):
         if self.is_running:
             return
 
         self.is_running = True
         try:
             num_emulators = self.num_emulators_var.get()
-            self.update_status(f"Starting Slugma Egg sequence for {num_emulators} emulators...")
+            self.update_status(f"Starting Primo Slugma Egg sequence for {num_emulators} emulators...")
             self.update_emulator_count_file()
             self.find_melonds_windows()
 
@@ -566,6 +566,126 @@ class EmulatorController:
 
             # Soft reset
             self.execute_soft_reset()
+
+            # Talking to Primo
+            time.sleep(1.5)
+            self.press_a()
+            time.sleep(1.5)
+            self.press_a()
+            time.sleep(1.5)
+            self.press_a()
+            time.sleep(1.5)
+            self.press_a()
+            time.sleep(2)
+            self.press_a()
+            time.sleep(3)
+
+            # First Passwords Rock Head Work
+            self.press_a()
+            time.sleep(1.5)
+            self.move_down()
+            time.sleep(0.05)
+            self.move_right()
+            time.sleep(0.05)
+            self.press_a()
+            time.sleep(0.5)
+
+            for i in range(44):
+                self.move_down()
+                time.sleep(0.1)
+
+            self.press_a()
+            time.sleep(2)
+            self.move_right()
+            time.sleep(0.05)
+            self.press_a()
+            time.sleep(1.5)
+            self.move_down()
+            time.sleep(0.05)
+            self.move_down()
+            time.sleep(0.05)
+            self.move_right()
+            time.sleep(0.05)
+            self.move_right()
+            time.sleep(0.05)
+            self.press_a()
+            time.sleep(0.5)
+
+            self.move_right()
+            time.sleep(0.05)
+            for i in range(50):
+                self.move_down()
+                time.sleep(0.1)
+
+            self.press_a()
+            time.sleep(2)
+            self.move_down()
+            time.sleep(0.05)
+            self.press_a()
+            time.sleep(0.5)
+
+            self.press_a()
+            time.sleep(3)
+            self.press_a()
+            time.sleep(1.5)
+            self.press_a()
+            time.sleep(1.5)
+            self.press_a()
+            time.sleep(3)
+
+            # Second Passwords Likes Nice
+            self.press_a()
+            time.sleep(1.5)
+            for i in range(3):
+                self.move_down()
+                time.sleep(0.05)
+            self.press_a()
+            time.sleep(0.5)
+            self.move_right()
+            time.sleep(0.05)
+
+            for i in range(12):
+                self.move_down()
+                time.sleep(0.1)
+
+            self.press_a()
+            time.sleep(2)
+            self.move_right()
+            time.sleep(0.05)
+            self.press_a()
+            time.sleep(1)
+            for i in range(3):
+                self.move_down()
+                time.sleep(0.05)
+            self.press_a()
+            time.sleep(0.5)
+            self.move_right()
+            time.sleep(0.05)
+
+            for i in range(14):
+                self.move_down()
+                time.sleep(0.1)
+
+            self.press_a()
+            time.sleep(2)
+            self.move_down()
+            time.sleep(0.05)
+            self.press_a()
+            time.sleep(0.5)
+            self.press_a()
+            time.sleep(3)
+            self.press_a()
+            time.sleep(1.5)
+            self.press_a()
+            time.sleep(1.5)
+            self.press_a()
+            time.sleep(1.5)
+            self.press_a()
+            time.sleep(1)
+            self.press_a()
+            time.sleep(6)
+            self.press_a()
+            time.sleep(0.5)
 
             # Move into position
             for i in range(8):
@@ -596,14 +716,19 @@ class EmulatorController:
             time.sleep(0.35)
 
             self.hold_left(2.75)
+            time.sleep(.5)
+            self.hold_right(2.925)
 
-            # 31 times repeat with flame body
-            for i in range(4):
-                self.hold_right(2.9)
-                self.hold_left(2.9)
+            # 32 times repeat with flame body apparently wrong somehow
+            for i in range(34):
+                self.update_status(f"Hatching egg {33-i} Laps left")
+                self.hold_left(2.875)
+                self.hold_right(2.875)
 
-            #self.trigger_shinyhunter_increment()
-            self.update_status("Slugma Egg sequence completed")
+            self.press_a()
+
+            self.trigger_shinyhunter_increment()
+            self.update_status("Primo Slugma Egg sequence completed")
         finally:
             self.is_running = False
 
