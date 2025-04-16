@@ -79,6 +79,8 @@ class EmulatorController:
                height=2, width=20).grid(row=0, column=1, padx=5, pady=5)
         Button(right_frame, text="Sweet Scent", command=self.sweet_scent_sequence,
                height=2, width=20).grid(row=0, column=2, padx=5, pady=5)
+        Button(right_frame, text="Slugma Egg Reset", command=self.slugma_egg_sequence,
+               height=2, width=20).grid(row=0, column=3, padx=5, pady=5)
 
         # Row 1
         Button(right_frame, text="Eevee Reset", command=self.eevee_sequence,
@@ -95,6 +97,7 @@ class EmulatorController:
                height=2, width=20).grid(row=2, column=1, padx=5, pady=5)
         Button(right_frame, text="Headbutt", command=self.headbutt,
                height=2, width=20).grid(row=2, column=2, padx=5, pady=5)
+
 
         # DS Controller Layout Frame
         ds_frame = Frame(root)
@@ -274,29 +277,41 @@ class EmulatorController:
             except Exception as e:
                 self.update_status(f"Controller error: {e}")
 
-    def set_axis(self, axis, value, duration=0.05):  # Updated default duration
+    def set_axis(self, axis, value, duration):  # Updated default duration
         """Set axis value with automatic reset after duration"""
         self.hold_axis(axis, value, duration)  # Reuse new function
 
     def move_left(self, duration=0.05):
         """Move Left (Axis 1-) - single press"""
         self.set_axis(1, 0x0000, duration)  # Full left
-        self.update_status("Moving Left (single press)")
 
     def move_right(self, duration=0.05):
         """Move Right (Axis 1+) - single press"""
         self.set_axis(1, 0x8000, duration)  # Full right
-        self.update_status("Moving Right (single press)")
 
     def move_up(self, duration=0.05):
         """Move Up (Axis 2-) - single press"""
         self.set_axis(2, 0x0000, duration)  # Full up
-        self.update_status("Moving Up (single press)")
 
     def move_down(self, duration=0.05):
         """Move Down (Axis 2+) - single press"""
         self.set_axis(2, 0x8000, duration)  # Full down
-        self.update_status("Moving Down (single press)")
+
+    def hold_left(self, duration):
+        """(Axis 1-)"""
+        self.set_axis(1, 0x0000, duration)  # Full left
+
+    def hold_right(self, duration):
+        """(Axis 1+)"""
+        self.set_axis(1, 0x8000, duration)  # Full right
+
+    def hold_up(self, duration):
+        """(Axis 2-)"""
+        self.set_axis(2, 0x0000, duration)  # Full up
+
+    def hold_down(self, duration):
+        """(Axis 2+)"""
+        self.set_axis(2, 0x8000, duration)  # Full down
 
     def tap_left(self, duration=0.05):
         """Updated to use hold_axis"""
@@ -322,9 +337,7 @@ class EmulatorController:
 
     def test_inputs(self):
         """Test button that taps left twice"""
-        self.move_left()
-        time.sleep(0.1)
-        self.move_left()
+        self.hold_right(duration=4)
 
     def execute_soft_reset(self):
         """Standard soft reset sequence"""
@@ -339,7 +352,7 @@ class EmulatorController:
         time.sleep(3)
         self.press_a()
         time.sleep(3)
-        self.press_a()
+        #self.press_a()
 
     def execute_run_away(self):
         """Standard run away sequence without increment"""
@@ -533,6 +546,64 @@ class EmulatorController:
 
             self.trigger_shinyhunter_increment()
             self.update_status("Simple Reset sequence completed")
+        finally:
+            self.is_running = False
+
+    def slugma_egg_sequence(self):
+        if self.is_running:
+            return
+
+        self.is_running = True
+        try:
+            num_emulators = self.num_emulators_var.get()
+            self.update_status(f"Starting Slugma Egg sequence for {num_emulators} emulators...")
+            self.update_emulator_count_file()
+            self.find_melonds_windows()
+
+            if not windows:
+                messagebox.showwarning("Warning", "No melonDS windows found")
+                return
+
+            # Soft reset
+            self.execute_soft_reset()
+
+            # Move into position
+            for i in range(8):
+                self.move_down()
+                time.sleep(0.1)
+
+            for i in range(5):
+                self.move_left()
+                time.sleep(0.1)
+
+            self.move_down()
+            time.sleep(0.1)
+            self.move_down()
+            time.sleep(3.5)
+
+            for i in range(4):
+                self.move_left()
+                time.sleep(0.1)
+
+            time.sleep(0.05)
+
+            for i in range(11):
+                self.move_up()
+                time.sleep(0.1)
+
+            # Start Biking
+            self.press_y()
+            time.sleep(0.35)
+
+            self.hold_left(2.75)
+
+            # 31 times repeat with flame body
+            for i in range(4):
+                self.hold_right(2.9)
+                self.hold_left(2.9)
+
+            #self.trigger_shinyhunter_increment()
+            self.update_status("Slugma Egg sequence completed")
         finally:
             self.is_running = False
 
