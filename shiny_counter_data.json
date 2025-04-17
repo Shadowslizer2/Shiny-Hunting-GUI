@@ -118,7 +118,7 @@
             "found_date": "2025-04-11 08:12:27",
             "game": "HeartGold/SoulSilver",
             "notes": null,
-            "method": "Random Encounter"
+            "method": "Soft Reset"
         },
         "anorith": {
             "name": "anorith",
@@ -167,10 +167,23 @@
             "game": "HeartGold/SoulSilver",
             "notes": "Unique Ambitious hunt where I hatch an egg from Primo at Full Odds, Started 4/15",
             "method": "Soft Reset"
+        },
+        "steelix": {
+            "name": "steelix",
+            "encounters": 0,
+            "adjustment": 24,
+            "sprite_url": null,
+            "last_updated": "2025-04-17 09:14:43",
+            "status": "ACTIVE",
+            "found_date": null,
+            "game": "HeartGold/SoulSilver",
+            "notes": null,
+            "method": "Random Encounter"
         }
     },
     "active_hunts": [
-        "combee"
+        "combee",
+        "steelix"
     ],
     "last_pokemon": "combee"
 }

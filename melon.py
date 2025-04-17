@@ -32,7 +32,7 @@ class EmulatorController:
         self.root = root
         self.is_running = False  # Lock to prevent overlapping sequences
         root.title("MelonDS Controller")
-        root.geometry("800x600")
+        root.geometry("900x600")
 
         # Initialize communication files
         self.initialize_communication_files()
@@ -98,14 +98,31 @@ class EmulatorController:
         Button(right_frame, text="Headbutt", command=self.headbutt,
                height=2, width=20).grid(row=2, column=2, padx=5, pady=5)
 
-
         # DS Controller Layout Frame
         ds_frame = Frame(root)
         ds_frame.pack(pady=20)
 
-        # D-Pad (Left side)
+        # New Axis Hold Frame (Left-most side)
+        axis_hold_frame = Frame(ds_frame)
+        axis_hold_frame.grid(row=0, column=0, padx=10)
+
+        # Axis Hold buttons arranged in cross pattern
+        Button(axis_hold_frame, text="Up", command=lambda: self.set_axis_perm('Up'), width=5, height=1).grid(row=1,
+                                                                                                             column=1,
+                                                                                                             pady=2)
+        Button(axis_hold_frame, text="Left", command=lambda: self.set_axis_perm('Left'), width=5, height=1).grid(row=2,
+                                                                                                                 column=0,
+                                                                                                                 padx=2)
+        Button(axis_hold_frame, text="●", command=self.reset_axes, width=5, height=1).grid(row=2, column=1, padx=2)
+        Button(axis_hold_frame, text="Right", command=lambda: self.set_axis_perm('Right'), width=5, height=1).grid(
+            row=2, column=2, padx=2)
+        Button(axis_hold_frame, text="Down", command=lambda: self.set_axis_perm('Down'), width=5, height=1).grid(row=3,
+                                                                                                                 column=1,
+                                                                                                                 pady=2)
+
+        # D-Pad (Moved to column 1)
         dpad_frame = Frame(ds_frame)
-        dpad_frame.grid(row=0, column=0, padx=20)
+        dpad_frame.grid(row=0, column=1, padx=20)
 
         # D-Pad buttons arranged in cross pattern with text labels
         Label(dpad_frame, text="D-Pad").grid(row=0, column=1)
@@ -116,7 +133,7 @@ class EmulatorController:
 
         # Action buttons (Right side)
         action_frame = Frame(ds_frame)
-        action_frame.grid(row=0, column=1, padx=20)
+        action_frame.grid(row=0, column=2, padx=20)
 
         # Action buttons arranged in diamond pattern with corrected positions
         Label(action_frame, text="Action Buttons").grid(row=0, column=1)
@@ -127,7 +144,7 @@ class EmulatorController:
 
         # Fast Forward button
         ff_frame = Frame(ds_frame)
-        ff_frame.grid(row=0, column=2, padx=10)
+        ff_frame.grid(row=0, column=3, padx=10)
         self.ff_button = Button(ff_frame, text="Fast Forward", command=self.toggle_fast_forward,
                                 height=3, width=15, bg='#ffd3b6', fg='black')
         self.ff_button.pack()
@@ -280,6 +297,33 @@ class EmulatorController:
     def set_axis(self, axis, value, duration):  # Updated default duration
         """Set axis value with automatic reset after duration"""
         self.hold_axis(axis, value, duration)  # Reuse new function
+
+    def set_axis_perm(self, direction):
+        """Set axis permanently based on direction ('Left', 'Right', 'Up', 'Down')"""
+        if not CONTROLLER_AVAILABLE:
+            self.update_status("No controller available")
+            return
+
+        try:
+            axis_value = {
+                'Left': (pyvjoy.HID_USAGE_X, 0x0000),
+                'Right': (pyvjoy.HID_USAGE_X, 0x8000),
+                'Up': (pyvjoy.HID_USAGE_Y, 0x0000),
+                'Down': (pyvjoy.HID_USAGE_Y, 0x8000)
+            }.get(direction)
+
+            if axis_value:
+                axis, value = axis_value
+                controller.set_axis(axis, value)
+            else:
+                self.update_status(f"Invalid direction: {direction}")
+        except Exception as e:
+            self.update_status(f"Controller error: {e}")
+
+    def reset_axes(self):
+        """Reset both axes to center position"""
+        self.reset_axis(1)  # X-axis
+        self.reset_axis(2)  # Y-axis
 
     def move_left(self, duration=0.05):
         """Move Left (Axis 1-) - single press"""
