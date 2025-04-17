@@ -75,7 +75,7 @@ class EmulatorController:
         # Row 0
         Button(right_frame, text="Sudowoodo Reset", command=self.sudowoodo_sequence,
                height=2, width=20).grid(row=0, column=0, padx=5, pady=5)
-        Button(right_frame, text="Run Away", command=self.run_away,
+        Button(right_frame, text="Electrode Run Away", command=self.run_away,
                height=2, width=20).grid(row=0, column=1, padx=5, pady=5)
         Button(right_frame, text="Sweet Scent", command=self.sweet_scent_sequence,
                height=2, width=20).grid(row=0, column=2, padx=5, pady=5)
@@ -107,22 +107,20 @@ class EmulatorController:
         axis_hold_frame.grid(row=0, column=0, padx=10)
 
         # Axis Hold buttons arranged in cross pattern
+        Label(axis_hold_frame, text="Hold Direction").grid(row=0, column=1)
         Button(axis_hold_frame, text="Up", command=lambda: self.set_axis_perm('Up'), width=5, height=1).grid(row=1,
-                                                                                                             column=1,
-                                                                                                             pady=2)
+                                                                                                             column=1)
         Button(axis_hold_frame, text="Left", command=lambda: self.set_axis_perm('Left'), width=5, height=1).grid(row=2,
-                                                                                                                 column=0,
-                                                                                                                 padx=2)
-        Button(axis_hold_frame, text="●", command=self.reset_axes, width=5, height=1).grid(row=2, column=1, padx=2)
+                                                                                                                 column=0)
+        Button(axis_hold_frame, text="●", command=self.reset_axes, width=5, height=1).grid(row=2, column=1)
         Button(axis_hold_frame, text="Right", command=lambda: self.set_axis_perm('Right'), width=5, height=1).grid(
-            row=2, column=2, padx=2)
+            row=2, column=2)
         Button(axis_hold_frame, text="Down", command=lambda: self.set_axis_perm('Down'), width=5, height=1).grid(row=3,
-                                                                                                                 column=1,
-                                                                                                                 pady=2)
+                                                                                                                 column=1)
 
         # D-Pad (Moved to column 1)
         dpad_frame = Frame(ds_frame)
-        dpad_frame.grid(row=0, column=1, padx=20)
+        dpad_frame.grid(row=0, column=1, padx=10)
 
         # D-Pad buttons arranged in cross pattern with text labels
         Label(dpad_frame, text="D-Pad").grid(row=0, column=1)
@@ -132,15 +130,15 @@ class EmulatorController:
         Button(dpad_frame, text="Right", command=self.move_right, width=5, height=1).grid(row=2, column=2)
 
         # Action buttons (Right side)
-        action_frame = Frame(ds_frame)
-        action_frame.grid(row=0, column=2, padx=20)
+        button_frame = Frame(ds_frame)
+        button_frame.grid(row=0, column=2, padx=10)
 
         # Action buttons arranged in diamond pattern with corrected positions
-        Label(action_frame, text="Action Buttons").grid(row=0, column=1)
-        Button(action_frame, text="X", command=self.press_x, width=5, height=1).grid(row=1, column=1)  # Top
-        Button(action_frame, text="Y", command=self.press_y, width=5, height=1).grid(row=2, column=0)  # Left
-        Button(action_frame, text="A", command=self.press_a, width=5, height=1).grid(row=2, column=2)  # Right
-        Button(action_frame, text="B", command=self.press_b, width=5, height=1).grid(row=3, column=1)  # Bottom
+        Label(button_frame, text="Buttons").grid(row=0, column=1)
+        Button(button_frame, text="X", command=self.press_x, width=5, height=1).grid(row=1, column=1)  # Top
+        Button(button_frame, text="Y", command=self.press_y, width=5, height=1).grid(row=2, column=0)  # Left
+        Button(button_frame, text="A", command=self.press_a, width=5, height=1).grid(row=2, column=2)  # Right
+        Button(button_frame, text="B", command=self.press_b, width=5, height=1).grid(row=3, column=1)  # Bottom
 
         # Fast Forward button
         ff_frame = Frame(ds_frame)
@@ -149,6 +147,14 @@ class EmulatorController:
                                 height=3, width=15, bg='#ffd3b6', fg='black')
         self.ff_button.pack()
         self.ff_state = False
+
+        # Simple Actions
+        action_frame = Frame(ds_frame)
+        action_frame.grid(row=0, column=4, padx=10)
+
+        Label(action_frame, text="Action Buttons").grid(row=0, column=0)
+        Button(action_frame, text="Run Away", command=self.run_away_action,
+               height=2, width=20).grid(row=1, column=0, padx=5, pady=5)
 
         # Shoulder buttons (Top)
         shoulder_frame = Frame(ds_frame)
@@ -397,6 +403,17 @@ class EmulatorController:
         self.press_a()
         time.sleep(3)
         self.press_a()
+
+    def run_away_action(self):
+        self.tap_left()
+        time.sleep(0.05)
+        self.tap_left()
+        time.sleep(0.05)
+        self.tap_right()
+        time.sleep(0.05)
+        self.press_a()
+        self.trigger_shinyhunter_increment()
+
 
     def execute_run_away(self):
         """Standard run away sequence without increment"""

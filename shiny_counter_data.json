@@ -170,10 +170,10 @@
         },
         "steelix": {
             "name": "steelix",
-            "encounters": 0,
+            "encounters": 1392,
             "adjustment": 24,
-            "sprite_url": null,
-            "last_updated": "2025-04-17 09:14:43",
+            "sprite_url": "cache\\sprites\\steelix_150x150.png",
+            "last_updated": "2025-04-17 15:27:09",
             "status": "ACTIVE",
             "found_date": null,
             "game": "HeartGold/SoulSilver",
