@@ -158,20 +158,19 @@
         },
         "slugma": {
             "name": "slugma",
-            "encounters": 240,
+            "encounters": 1488,
             "adjustment": 24,
             "sprite_url": "cache\\sprites\\slugma_150x150.png",
-            "last_updated": "2025-04-15 22:47:55",
-            "status": "ACTIVE",
-            "found_date": null,
+            "last_updated": "2025-04-16 20:27:45",
+            "status": "COMPLETE",
+            "found_date": "2025-04-16 20:30:37",
             "game": "HeartGold/SoulSilver",
-            "notes": null,
+            "notes": "Unique Ambitious hunt where I hatch an egg from Primo at Full Odds, Started 4/15",
             "method": "Soft Reset"
         }
     },
     "active_hunts": [
-        "combee",
-        "slugma"
+        "combee"
     ],
     "last_pokemon": "combee"
 }

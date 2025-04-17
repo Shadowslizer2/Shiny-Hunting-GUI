@@ -717,10 +717,10 @@ class EmulatorController:
 
             self.hold_left(2.75)
             time.sleep(.5)
-            self.hold_right(2.925)
+            self.hold_right(2.93)
 
             # 32 times repeat with flame body apparently wrong somehow
-            for i in range(34):
+            for i in range(33):
                 self.update_status(f"Hatching egg {33-i} Laps left")
                 self.hold_left(2.875)
                 self.hold_right(2.875)
