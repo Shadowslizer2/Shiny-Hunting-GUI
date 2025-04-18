@@ -6,7 +6,6 @@ import subprocess
 import sys
 from pathlib import Path
 from typing import Optional, Dict, List
-
 from PIL import Image, ImageTk
 import requests
 from io import BytesIO
@@ -31,24 +30,27 @@ class PokemonData:
     notes: Optional[str] = None
     method: Optional[str] = None
 
-
 @dataclass
 class AppData:
     pokemon: Dict[str, PokemonData]
     active_hunts: List[str] = None
     last_pokemon: Optional[str] = None
+    theme: str = "light"
+    sort_by: str = "most_recent"
+    sort_order: str = "descending"
 
     def __post_init__(self):
         if self.active_hunts is None:
             self.active_hunts = []
 
-
 class Config:
     API_BASE_URL = "https://pokeapi.co/api/v2"
-    MAIN_SPRITE_SIZE = (150, 150)  # For main display
-    CARD_SPRITE_SIZE = (80, 80)  # For hunt cards
-    MINI_SPRITE_SIZE = (40, 40)  # For compact displays
-    COLUMNS = 2
+    MAIN_SPRITE_SIZE = (150, 150)
+    CARD_SPRITE_SIZE = (80, 80)
+    MINI_SPRITE_SIZE = (40, 40)
+    MIN_COLUMNS = 1
+    MAX_COLUMNS = 5
+    CARD_MIN_WIDTH = 300
 
     POKEMON_GAMES = {
         "Red/Blue/Yellow": 1,
@@ -83,16 +85,30 @@ class Config:
     ]
 
     COLORS = {
-        'primary': '#3D7DCA',
-        'secondary': '#FFCB05',
-        'background': '#f0f8ff',
-        'card_bg': '#ffffff',
-        'text_primary': '#2C3E50',
-        'text_secondary': '#7F8C8D',
-        'border': '#BDC3C7',
-        'highlight': '#D6EAF8',
-        'complete': '#2ECC71',
-        'paused': '#E74C3C'
+        'light': {
+            'primary': '#3D7DCA',
+            'secondary': '#FFCB05',
+            'background': '#f0f8ff',
+            'card_bg': '#ffffff',
+            'text_primary': '#2C3E50',
+            'text_secondary': '#7F8C8D',
+            'border': '#BDC3C7',
+            'highlight': '#D6EAF8',
+            'complete': '#28a745',  # Darker green
+            'paused': '#E74C3C'
+        },
+        'dark': {
+            'primary': '#2c3e50',
+            'secondary': '#f1c40f',
+            'background': '#34495e',
+            'card_bg': '#2c3e50',
+            'text_primary': '#ecf0f1',
+            'text_secondary': '#bdc3c7',
+            'border': '#7f8c8d',
+            'highlight': '#3498db',
+            'complete': '#28a745',
+            'paused': '#e74c3c'
+        }
     }
 
 
@@ -102,6 +118,7 @@ class ShinyCounter:
         self.root.title("Pokémon Shiny Hunter")
         self.root.geometry("1000x600")
         self.root.minsize(800, 500)
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
         self.storage_file = DATA_FILE
         self.saved_data = AppData(pokemon={})
@@ -111,6 +128,9 @@ class ShinyCounter:
         self.current_game = tk.StringVar()
         self.current_method = tk.StringVar(value=Config.HUNT_METHODS[0])
         self.image_references = []
+        self.current_theme = "light"
+        self.sort_by = tk.StringVar(value="most_recent")
+        self.sort_order = tk.StringVar(value="descending")
 
         self.communication_files = {
             'emulator_count': "melon_emulator_count.txt",
@@ -138,19 +158,39 @@ class ShinyCounter:
         except Exception as e:
             print(f"Error loading recent hunt: {e}")
 
+    def on_close(self):
+        self.saved_data.last_pokemon = self.current_pokemon
+        self.save_data()
+        self.root.destroy()
+
     def setup_styles(self):
         style = ttk.Style()
         style.theme_use('clam')
-        style.configure('TFrame', background=Config.COLORS['background'])
-        style.configure('Card.TFrame', background=Config.COLORS['card_bg'], borderwidth=1, relief=tk.RAISED)
-        style.configure('TButton', font=('Arial', 10), padding=6, background=Config.COLORS['primary'], foreground='white')
-        style.map('TButton', background=[('active', Config.COLORS['primary'])])
-        style.configure('Secondary.TButton', background=Config.COLORS['secondary'], foreground=Config.COLORS['text_primary'])
-        style.configure('Success.TButton', background=Config.COLORS['complete'], foreground='white')
-        style.configure('Danger.TButton', background=Config.COLORS['paused'], foreground='white')
-        style.configure('TEntry', fieldbackground=Config.COLORS['card_bg'], foreground=Config.COLORS['text_primary'])
-        style.configure('Header.TLabel', font=('Arial', 14, 'bold'), foreground=Config.COLORS['primary'])
-        style.configure('Subheader.TLabel', font=('Arial', 12), foreground=Config.COLORS['text_primary'])
+        colors = Config.COLORS[self.current_theme]
+        style.configure('TFrame', background=colors['background'])
+        style.configure('Card.TFrame', background=colors['card_bg'], borderwidth=1, relief=tk.RAISED)
+        style.configure('TButton', font=('Arial', 10), padding=6, background=colors['primary'], foreground='white')
+        style.map('TButton', background=[('active', colors['primary'])])
+        style.configure('Secondary.TButton', background=colors['secondary'], foreground=colors['text_primary'])
+        style.configure('Success.TButton', background=colors['complete'], foreground='white')
+        style.configure('Danger.TButton', background=colors['paused'], foreground='white')
+        style.configure('TEntry', fieldbackground=colors['card_bg'], foreground=colors['text_primary'])
+        style.configure('Header.TLabel', font=('Arial', 14, 'bold'), foreground=colors['primary'])
+        style.configure('Subheader.TLabel', font=('Arial', 12), foreground=colors['text_primary'])
+
+    def toggle_theme(self):
+        self.current_theme = 'dark' if self.current_theme == 'light' else 'light'
+        self.saved_data.theme = self.current_theme
+        self.setup_styles()
+        self.update_ui_colors()
+        self.save_data()
+
+    def update_ui_colors(self):
+        colors = Config.COLORS[self.current_theme]
+        self.root.configure(background=colors['background'])
+        self.hunts_canvas.configure(bg=colors['card_bg'])
+        for widget in self.hunts_frame.winfo_children():
+            widget.configure(style='Card.TFrame')
 
     def create_widgets(self):
         main_frame = ttk.Frame(self.root)
@@ -193,29 +233,45 @@ class ShinyCounter:
 
         button_frame = ttk.Frame(control_frame)
         button_frame.pack(fill=tk.X, pady=5)
-        ttk.Button(button_frame, text="+", command=lambda: self.adjust_number("increase")).pack(side=tk.LEFT, expand=True)
-        ttk.Button(button_frame, text="-", command=lambda: self.adjust_number("decrease")).pack(side=tk.LEFT, expand=True)
-        ttk.Button(button_frame, text="Reset", command=lambda: self.adjust_number("reset"), style='Secondary.TButton').pack(side=tk.LEFT, expand=True)
+        ttk.Button(button_frame, text="+", command=lambda: self.adjust_number("increase")).pack(side=tk.LEFT,
+                                                                                                expand=True)
+        ttk.Button(button_frame, text="-", command=lambda: self.adjust_number("decrease")).pack(side=tk.LEFT,
+                                                                                                expand=True)
+        ttk.Button(button_frame, text="Reset", command=lambda: self.adjust_number("reset"),
+                   style='Secondary.TButton').pack(side=tk.LEFT, expand=True)
 
         hunts_panel = ttk.Frame(main_frame, style='Card.TFrame')
         hunts_panel.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=5, pady=5)
 
-        ttk.Label(hunts_panel, text="Shiny Hunts", style='Header.TLabel').pack(pady=5)
-        self.hunts_canvas = tk.Canvas(hunts_panel, bg=Config.COLORS['card_bg'], highlightthickness=0)
+        header_frame = ttk.Frame(hunts_panel)
+        header_frame.pack(fill=tk.X, pady=5)
+        ttk.Label(header_frame, text="Shiny Hunts", style='Header.TLabel').pack(side=tk.LEFT)
+
+        sort_frame = ttk.Frame(header_frame)
+        sort_frame.pack(side=tk.RIGHT, padx=5)
+        ttk.Combobox(sort_frame, textvariable=self.sort_by, values=["most_recent", "most_encounters"], width=15,
+                     state="readonly").pack(side=tk.LEFT, padx=2)
+        ttk.Combobox(sort_frame, textvariable=self.sort_order, values=["ascending", "descending"], width=12,
+                     state="readonly").pack(side=tk.LEFT, padx=2)
+        self.sort_by.trace_add('write', lambda *args: self.update_hunts_panel())
+        self.sort_order.trace_add('write', lambda *args: self.update_hunts_panel())
+
+        self.hunts_canvas = tk.Canvas(hunts_panel, bg=Config.COLORS[self.current_theme]['card_bg'],
+                                      highlightthickness=0)
         self.hunts_scrollbar = ttk.Scrollbar(hunts_panel, orient="vertical", command=self.hunts_canvas.yview)
         self.hunts_frame = ttk.Frame(self.hunts_canvas, padding=10)
         self.hunts_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.hunts_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.hunts_canvas.create_window((0, 0), window=self.hunts_frame, anchor="nw")
         self.hunts_canvas.configure(yscrollcommand=self.hunts_scrollbar.set)
-        self.hunts_frame.bind("<Configure>", lambda e: self.hunts_canvas.configure(scrollregion=self.hunts_canvas.bbox("all")))
+        self.hunts_frame.bind("<Configure>", self.on_hunts_frame_configure)
+        self.hunts_canvas.bind("<Configure>", self.on_canvas_configure)
         self.hunts_canvas.bind_all("<MouseWheel>", self.on_mousewheel)
 
         menubar = tk.Menu(self.root)
         file_menu = tk.Menu(menubar, tearoff=0)
         file_menu.add_command(label="New Hunt", command=self.change_pokemon)
-        file_menu.add_command(label="Export Data", command=self.export_data)
-        file_menu.add_command(label="Import Data", command=self.import_data)
+        file_menu.add_command(label="Toggle Theme", command=self.toggle_theme)
         file_menu.add_command(label="Run Melon Script", command=self.run_melon_script)
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.root.quit)
@@ -247,8 +303,14 @@ class ShinyCounter:
                     self.saved_data = AppData(
                         pokemon=pokemon_dict,
                         active_hunts=loaded_data.get('active_hunts', []),
-                        last_pokemon=loaded_data.get('last_pokemon')
+                        last_pokemon=loaded_data.get('last_pokemon'),
+                        theme=loaded_data.get('theme', 'light'),
+                        sort_by=loaded_data.get('sort_by', 'most_recent'),
+                        sort_order=loaded_data.get('sort_order', 'descending')
                     )
+                    self.current_theme = self.saved_data.theme
+                    self.sort_by.set(self.saved_data.sort_by)
+                    self.sort_order.set(self.saved_data.sort_order)
         except json.JSONDecodeError as e:
             messagebox.showerror("Error", f"Invalid JSON data: {e}")
             self.saved_data = AppData(pokemon={})
@@ -258,16 +320,17 @@ class ShinyCounter:
 
     def save_data(self) -> None:
         try:
-            active_hunts = [name for name, data in self.saved_data.pokemon.items()
-                            if data.status == "ACTIVE"]
-
+            self.saved_data.sort_by = self.sort_by.get()
+            self.saved_data.sort_order = self.sort_order.get()
             data = {
                 "pokemon": {k: asdict(v) for k, v in self.saved_data.pokemon.items()},
-                "active_hunts": active_hunts,
-                "last_pokemon": self.saved_data.last_pokemon
+                "active_hunts": self.saved_data.active_hunts,
+                "last_pokemon": self.saved_data.last_pokemon,
+                "theme": self.saved_data.theme,
+                "sort_by": self.saved_data.sort_by,
+                "sort_order": self.saved_data.sort_order
             }
-
-            with open(self.storage_file, 'w', encoding='utf-8') as f:  # Added encoding
+            with open(self.storage_file, 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=4, default=str)
         except Exception as e:
             messagebox.showerror("Error", f"Could not save data: {e}")
@@ -344,7 +407,9 @@ class ShinyCounter:
         list_frame = ttk.Frame(popup)
         list_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         scrollbar = ttk.Scrollbar(list_frame)
-        pokemon_list = tk.Listbox(list_frame, yscrollcommand=scrollbar.set, bg=Config.COLORS['card_bg'], fg=Config.COLORS['text_primary'])
+        colors = Config.COLORS[self.current_theme]
+        pokemon_list = tk.Listbox(list_frame, yscrollcommand=scrollbar.set,
+                                  bg=colors['card_bg'], fg=colors['text_primary'])
         scrollbar.config(command=pokemon_list.yview)
         pokemon_list.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
@@ -473,6 +538,17 @@ class ShinyCounter:
             return base_odds // 8 if base_odds == 4096 else base_odds // 6
         return base_odds
 
+    def on_canvas_configure(self, event):
+        self.update_hunts_panel()
+
+    def on_hunts_frame_configure(self, event):
+        self.hunts_canvas.configure(scrollregion=self.hunts_canvas.bbox("all"))
+
+    def calculate_columns(self):
+        canvas_width = self.hunts_canvas.winfo_width()
+        columns = max(Config.MIN_COLUMNS, min(Config.MAX_COLUMNS, canvas_width // Config.CARD_MIN_WIDTH))
+        return columns
+
     def update_hunts_panel(self):
         for widget in self.hunts_frame.winfo_children():
             widget.destroy()
@@ -481,39 +557,35 @@ class ShinyCounter:
             ttk.Label(self.hunts_frame, text="No shiny hunts yet").pack()
             return
 
-        # Grid layout with 2 columns
-        row = col = 0
-        for idx, (name, data) in enumerate(sorted(
-                self.saved_data.pokemon.items(),
-                key=lambda x: x[1].encounters,
-                reverse=True
-        )):
-            card = self.create_hunt_card(name, data)
-            card.grid(
-                row=row,
-                column=col,
-                padx=5,
-                pady=5,
-                sticky="nsew"
-            )
+        columns = self.calculate_columns()
+        hunts = sorted(self.saved_data.pokemon.values(), key=self.get_sort_key, reverse=self.sort_order.get() == "descending")
 
+        row = col = 0
+        for idx, data in enumerate(hunts):
+            card = self.create_hunt_card(data.name, data)
+            card.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
             col += 1
-            if col >= Config.COLUMNS:
+            if col >= columns:
                 col = 0
                 row += 1
 
-        # Configure grid weights
-        for c in range(Config.COLUMNS):
+        for c in range(columns):
             self.hunts_frame.grid_columnconfigure(c, weight=1)
+
+    def get_sort_key(self, data):
+        if self.sort_by.get() == "most_recent":
+            return datetime.strptime(data.last_updated, "%Y-%m-%d %H:%M:%S") if data.last_updated else datetime.min
+        return data.encounters
 
     def create_hunt_card(self, pokemon_name: str, pokemon_data: PokemonData):
         card = ttk.Frame(self.hunts_frame, style='Card.TFrame', padding=10)
+        colors = Config.COLORS[self.current_theme]  # Get current theme colors
 
-        status = pokemon_data.status  # Now using the string directly
+        status = pokemon_data.status
         status_color = {
-            "COMPLETE": Config.COLORS['complete'],
-            "PAUSED": Config.COLORS['paused'],
-            "ACTIVE": Config.COLORS['primary']
+            "COMPLETE": colors['complete'],
+            "PAUSED": colors['paused'],
+            "ACTIVE": colors['primary']
         }.get(status)
 
         # Header frame

@@ -184,5 +184,8 @@
     "active_hunts": [
         "combee"
     ],
-    "last_pokemon": "combee"
+    "last_pokemon": "combee",
+    "theme": "dark",
+    "sort_by": "most_recent",
+    "sort_order": "descending"
 }
