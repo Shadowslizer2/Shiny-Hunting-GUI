@@ -21,7 +21,7 @@
             "status": "COMPLETE",
             "found_date": "2025-03-22 20:30:00",
             "game": "HeartGold/SoulSilver",
-            "notes": null,
+            "notes": "Most likely had rng clones so # would be lower",
             "method": "Soft Reset"
         },
         "rattata": {
@@ -33,7 +33,7 @@
             "status": "COMPLETE",
             "found_date": "2025-03-23 23:30:00",
             "game": "HeartGold/SoulSilver",
-            "notes": null,
+            "notes": "Most likely had rng clones so # would be lower",
             "method": "Random Encounter"
         },
         "dratini": {
@@ -45,7 +45,7 @@
             "status": "COMPLETE",
             "found_date": "2025-03-24 10:30:00",
             "game": "HeartGold/SoulSilver",
-            "notes": null,
+            "notes": "Most likely had rng clones so # would be lower. There were 2 shinies when this was found",
             "method": "Soft Reset"
         },
         "nidoran-m": {
@@ -170,20 +170,19 @@
         },
         "steelix": {
             "name": "steelix",
-            "encounters": 1392,
+            "encounters": 4008,
             "adjustment": 24,
             "sprite_url": "cache\\sprites\\steelix_150x150.png",
-            "last_updated": "2025-04-17 15:27:09",
-            "status": "ACTIVE",
-            "found_date": null,
+            "last_updated": "2025-04-17 19:50:58",
+            "status": "COMPLETE",
+            "found_date": "2025-04-17 20:08:31",
             "game": "HeartGold/SoulSilver",
             "notes": null,
             "method": "Random Encounter"
         }
     },
     "active_hunts": [
-        "combee",
-        "steelix"
+        "combee"
     ],
     "last_pokemon": "combee"
 }
