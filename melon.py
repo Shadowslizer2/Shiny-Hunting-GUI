@@ -19,8 +19,10 @@ except:
     print("Warning: Virtual controller not available - will use keyboard fallback")
 
 # Global variables
-MELON_PATH = r"F:\Important Documents\Nintendo\Desmume\melonDS.exe"
-ROMS_DIR = r"F:\Important Documents\Nintendo\Desmume\Roms"
+# MAIN_DIR = r"F:\Important Documents\Nintendo\Desmume"
+MAIN_DIR = r"C:\Users\kevin\Documents\DS"
+MELON_PATH = MAIN_DIR + r"\melonDS.exe"
+ROMS_DIR = MAIN_DIR + r"\Roms"
 processes = []
 windows = []
 NUM_EMULATORS = 24
@@ -155,6 +157,9 @@ class EmulatorController:
         Label(action_frame, text="Action Buttons").grid(row=0, column=0)
         Button(action_frame, text="Run Away", command=self.run_away_action,
                height=2, width=20).grid(row=1, column=0, padx=5, pady=5)
+        Label(action_frame, text="Action Buttons").grid(row=0, column=0)
+        Button(action_frame, text="Spin", command=self.spin_action,
+               height=2, width=20).grid(row=2, column=0, padx=5, pady=5)
 
         # Shoulder buttons (Top)
         shoulder_frame = Frame(ds_frame)
@@ -414,6 +419,17 @@ class EmulatorController:
         self.press_a()
         self.trigger_shinyhunter_increment()
 
+    def spin_action(self):
+        self.move_up(0.025)
+        time.sleep(0.2)
+        self.move_right(0.025)
+        time.sleep(0.2)
+        self.move_down(0.025)
+        time.sleep(0.2)
+        self.move_left(0.025)
+        time.sleep(0.2)
+        self.move_up(0.025)
+        time.sleep(0.2)
 
     def execute_run_away(self):
         """Standard run away sequence without increment"""
