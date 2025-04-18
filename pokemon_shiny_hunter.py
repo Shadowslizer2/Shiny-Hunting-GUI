@@ -90,18 +90,23 @@ class Config:
             'secondary': '#FFCB05',
             'background': '#f0f8ff',
             'card_bg': '#ffffff',
+            'list_bg': '#ffffff',
+            'list_fg': '#2C3E50',
             'text_primary': '#2C3E50',
             'text_secondary': '#7F8C8D',
             'border': '#BDC3C7',
             'highlight': '#D6EAF8',
             'complete': '#28a745',  # Darker green
             'paused': '#E74C3C'
+
         },
         'dark': {
             'primary': '#2c3e50',
             'secondary': '#f1c40f',
             'background': '#34495e',
             'card_bg': '#2c3e50',
+            'list_bg': '#2c3e50',
+            'list_fg': '#ecf0f1',
             'text_primary': '#ecf0f1',
             'text_secondary': '#bdc3c7',
             'border': '#7f8c8d',
@@ -141,6 +146,8 @@ class ShinyCounter:
 
         CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
+        self.current_filter = tk.StringVar(value="all")
+        self.resize_job = None
         self.setup_styles()
         self.create_widgets()
         self.load_data()
@@ -246,6 +253,13 @@ class ShinyCounter:
         header_frame = ttk.Frame(hunts_panel)
         header_frame.pack(fill=tk.X, pady=5)
         ttk.Label(header_frame, text="Shiny Hunts", style='Header.TLabel').pack(side=tk.LEFT)
+
+        filter_frame = ttk.Frame(header_frame)
+        filter_frame.pack(side=tk.RIGHT, padx=10)
+        ttk.Button(filter_frame, text="All", command=lambda: self.set_filter("all")).pack(side=tk.LEFT, padx=2)
+        ttk.Button(filter_frame, text="Active", command=lambda: self.set_filter("active")).pack(side=tk.LEFT, padx=2)
+        ttk.Button(filter_frame, text="Completed", command=lambda: self.set_filter("complete")).pack(side=tk.LEFT,
+                                                                                                     padx=2)
 
         sort_frame = ttk.Frame(header_frame)
         sort_frame.pack(side=tk.RIGHT, padx=5)
@@ -409,7 +423,7 @@ class ShinyCounter:
         scrollbar = ttk.Scrollbar(list_frame)
         colors = Config.COLORS[self.current_theme]
         pokemon_list = tk.Listbox(list_frame, yscrollcommand=scrollbar.set,
-                                  bg=colors['card_bg'], fg=colors['text_primary'])
+                                  bg=colors['list_bg'], fg=colors['list_fg'])
         scrollbar.config(command=pokemon_list.yview)
         pokemon_list.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
@@ -538,8 +552,14 @@ class ShinyCounter:
             return base_odds // 8 if base_odds == 4096 else base_odds // 6
         return base_odds
 
-    def on_canvas_configure(self, event):
+    def set_filter(self, filter_type):
+        self.current_filter.set(filter_type)
         self.update_hunts_panel()
+
+    def on_canvas_configure(self, event):
+        if self.resize_job:
+            self.root.after_cancel(self.resize_job)
+        self.resize_job = self.root.after(200, self.update_hunts_panel)
 
     def on_hunts_frame_configure(self, event):
         self.hunts_canvas.configure(scrollregion=self.hunts_canvas.bbox("all"))
@@ -550,27 +570,40 @@ class ShinyCounter:
         return columns
 
     def update_hunts_panel(self):
-        for widget in self.hunts_frame.winfo_children():
+        # Clear existing cards using grid_slaves for better performance
+        for widget in self.hunts_frame.grid_slaves():
             widget.destroy()
 
         if not self.saved_data.pokemon:
             ttk.Label(self.hunts_frame, text="No shiny hunts yet").pack()
             return
 
-        columns = self.calculate_columns()
-        hunts = sorted(self.saved_data.pokemon.values(), key=self.get_sort_key, reverse=self.sort_order.get() == "descending")
+        # Filter and sort
+        filtered_hunts = self.filter_hunts()
+        sorted_hunts = sorted(filtered_hunts, key=self.get_sort_key,
+                            reverse=self.sort_order.get() == "descending")
 
+        # Grid layout
+        columns = self.calculate_columns()
         row = col = 0
-        for idx, data in enumerate(hunts):
+        for idx, data in enumerate(sorted_hunts):
             card = self.create_hunt_card(data.name, data)
             card.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
-            col += 1
-            if col >= columns:
-                col = 0
-                row += 1
+            col = (col + 1) % columns
+            row += col == 0
 
+        # Configure grid weights
         for c in range(columns):
             self.hunts_frame.grid_columnconfigure(c, weight=1)
+
+    def filter_hunts(self):
+        filter_type = self.current_filter.get()
+        return [
+            p for p in self.saved_data.pokemon.values()
+            if (filter_type == "all" or
+                (filter_type == "active" and p.status == "ACTIVE") or
+                (filter_type == "complete" and p.status == "COMPLETE"))
+        ]
 
     def get_sort_key(self, data):
         if self.sort_by.get() == "most_recent":
