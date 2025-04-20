@@ -136,10 +136,25 @@ class ShinyCounter:
 
     def load_most_recent_active_hunt(self):
         try:
-            if self.saved_data.active_hunts:
-                self.load_pokemon(self.saved_data.active_hunts[0])
+            # Get all active hunts sorted by last_updated
+            active_hunts = [
+                p for p in self.saved_data.pokemon.values()
+                if p.status == "ACTIVE"
+            ]
+
+            # Sort by last_updated descending
+            active_hunts.sort(
+                key=lambda x: datetime.strptime(x.last_updated,
+                                                "%Y-%m-%d %H:%M:%S") if x.last_updated else datetime.min,
+                reverse=True
+            )
+
+            if active_hunts:
+                most_recent = active_hunts[0].name
+                self.load_pokemon(most_recent)
             elif self.saved_data.last_pokemon and self.saved_data.last_pokemon in self.saved_data.pokemon:
                 self.load_pokemon(self.saved_data.last_pokemon)
+
         except Exception as e:
             print(f"Error loading recent hunt: {e}")
 
@@ -327,6 +342,11 @@ class ShinyCounter:
         try:
             pokemon_name = pokemon_name.lower()
             self.current_pokemon = pokemon_name
+
+            # Update active hunts order
+            if pokemon_name in self.saved_data.active_hunts:
+                self.saved_data.active_hunts.remove(pokemon_name)
+            self.saved_data.active_hunts.insert(0, pokemon_name)
 
             if self.current_pokemon in self.saved_data.pokemon:
                 data = self.saved_data.pokemon[self.current_pokemon]
@@ -664,6 +684,18 @@ class ShinyCounter:
             "PAUSED": "#e74c3c",
             "ACTIVE": "#3D7DCA"
         }.get(status, "#3D7DCA")
+
+        # Use theme-appropriate colors
+        bg_color = self.root._apply_appearance_mode(ctk.ThemeManager.theme["CTkFrame"]["fg_color"])
+        border_color = self.root._apply_appearance_mode(ctk.ThemeManager.theme["CTkButton"]["border_color"])
+
+        card = ctk.CTkFrame(
+            self.hunts_frame,
+            fg_color=bg_color,
+            border_width=2,
+            border_color=border_color,
+            corner_radius=10
+        )
 
         # Header with name and status
         header = ctk.CTkFrame(card, fg_color="transparent")
