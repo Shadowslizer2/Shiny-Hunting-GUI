@@ -19,8 +19,8 @@ except:
     print("Warning: Virtual controller not available - will use keyboard fallback")
 
 # Global variables
-# MAIN_DIR = r"F:\Important Documents\Nintendo\Desmume"
-MAIN_DIR = r"C:\Users\kevin\Documents\DS"
+MAIN_DIR = r"F:\Important Documents\Nintendo\Desmume"
+# MAIN_DIR = r"C:\Users\kevin\Documents\DS"
 MELON_PATH = MAIN_DIR + r"\melonDS.exe"
 ROMS_DIR = MAIN_DIR + r"\Roms"
 processes = []
