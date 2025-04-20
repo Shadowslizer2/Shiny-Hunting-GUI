@@ -116,6 +116,7 @@ class ShinyCounter:
         }
         self.last_trigger_time = 0
         self.initial_load = True
+        self.hunt_cards = {}  # Dictionary to track hunt cards
         self.resize_job = None
 
         CACHE_DIR.mkdir(parents=True, exist_ok=True)
@@ -376,6 +377,44 @@ class ShinyCounter:
             self.pokemon_label.configure(image=ctk_img)
             self.pokemon_label.image = ctk_img
 
+    def update_hunt_card(self, pokemon_name, pokemon_data):
+        card = self.hunt_cards[pokemon_name]
+
+        # Update status
+        status_color = {
+            "COMPLETE": "#28a745",
+            "PAUSED": "#e74c3c",
+            "ACTIVE": "#3D7DCA"
+        }.get(pokemon_data.status, "#3D7DCA")
+        card.status_label.configure(
+            text=f"• {pokemon_data.status}",
+            text_color=status_color
+        )
+
+        # Update encounters
+        formatted_number = "{:,}".format(pokemon_data.encounters)
+        card.encounters_label.configure(text=f"Encounters: {formatted_number}")
+
+        # Update probability
+        odds = self.calculate_shiny_odds(pokemon_data)
+        probability = 1 - ((odds - 1) / odds) ** pokemon_data.encounters
+        card.probability_label.configure(
+            text=f"Shiny Chance: {probability:.2%} (1/{odds:,})"
+        )
+
+        # Update game
+        if card.game_label:
+            card.game_label.configure(text=f"Game: {pokemon_data.game}")
+
+        # Update found date
+        if card.found_date_label and pokemon_data.status == "COMPLETE":
+            card.found_date_label.configure(text=f"Found: {pokemon_data.found_date}")
+
+        # Update status button
+        btn_text = "✓" if pokemon_data.status == "COMPLETE" else "▶"
+        btn_fg = "#28a745" if pokemon_data.status == "COMPLETE" else "#3D7DCA"
+        card.status_button.configure(text=btn_text, fg_color=btn_fg)
+
     def change_pokemon(self):
         popup = ctk.CTkToplevel(self.root)
         popup.title("Select Pokémon")
@@ -533,7 +572,24 @@ class ShinyCounter:
     def on_canvas_configure(self, event):
         if self.resize_job:
             self.root.after_cancel(self.resize_job)
-        self.resize_job = self.root.after(200, self.update_hunts_panel)
+        self.resize_job = self.root.after(200, self.resize_columns)
+
+    def resize_columns(self):
+        current_width = self.hunts_canvas.winfo_width()
+        columns = self.calculate_columns()
+
+        row, col = 0, 0
+        for card in self.hunt_cards.values():
+            card.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
+            col += 1
+            if col >= columns:
+                col = 0
+                row += 1
+
+        for c in range(columns):
+            self.hunts_frame.grid_columnconfigure(c, weight=1)
+
+        self.hunts_canvas.configure(scrollregion=self.hunts_canvas.bbox("all"))
 
     def on_hunts_frame_configure(self, event):
         self.hunts_canvas.configure(scrollregion=self.hunts_canvas.bbox("all"))
@@ -544,27 +600,47 @@ class ShinyCounter:
         return columns
 
     def update_hunts_panel(self):
-        for widget in self.hunts_frame.grid_slaves():
-            widget.destroy()
-
-        if not self.saved_data.pokemon:
-            ctk.CTkLabel(self.hunts_frame, text="No shiny hunts yet").pack()
-            return
-
+        current_width = self.hunts_canvas.winfo_width()
         filtered_hunts = self.filter_hunts()
         sorted_hunts = sorted(filtered_hunts, key=self.get_sort_key,
                               reverse=self.sort_order.get() == "descending")
+        current_hunt_names = {hunt.name for hunt in sorted_hunts}
 
+        # Remove cards that are no longer needed
+        for name in list(self.hunt_cards.keys()):
+            if name not in current_hunt_names:
+                self.hunt_cards[name].destroy()
+                del self.hunt_cards[name]
+
+        # Calculate grid layout
         columns = self.calculate_columns()
-        row = col = 0
-        for idx, data in enumerate(sorted_hunts):
-            card = self.create_hunt_card(data.name, data)
-            card.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
-            col = (col + 1) % columns
-            row += col == 0
+        row, col = 0, 0
 
+        # Update or create cards
+        for hunt in sorted_hunts:
+            pokemon_name = hunt.name
+            if pokemon_name in self.hunt_cards:
+                self.update_hunt_card(pokemon_name, hunt)
+            else:
+                self.hunt_cards[pokemon_name] = self.create_hunt_card(pokemon_name, hunt)
+
+            # Reposition card
+            self.hunt_cards[pokemon_name].grid(
+                row=row, column=col,
+                padx=5, pady=5, sticky="nsew"
+            )
+
+            col += 1
+            if col >= columns:
+                col = 0
+                row += 1
+
+        # Configure grid columns
         for c in range(columns):
             self.hunts_frame.grid_columnconfigure(c, weight=1)
+
+        # Update canvas scroll region
+        self.hunts_canvas.configure(scrollregion=self.hunts_canvas.bbox("all"))
 
     def filter_hunts(self):
         filter_type = self.current_filter.get()
@@ -589,16 +665,38 @@ class ShinyCounter:
             "ACTIVE": "#3D7DCA"
         }.get(status, "#3D7DCA")
 
+        # Header with name and status
         header = ctk.CTkFrame(card, fg_color="transparent")
-        header.grid(row=0, column=0, columnspan=2, sticky="ew")
+        header.grid(row=0, column=0, columnspan=2, sticky="ew", padx=5, pady=5)
 
+        # Name and status label
+        name_frame = ctk.CTkFrame(header, fg_color="transparent")
+        name_frame.pack(side="left", fill="x", expand=True)
+
+        name_label = ctk.CTkLabel(
+            name_frame,
+            text=pokemon_name.capitalize(),
+            font=("Arial", 12, "bold")
+        )
+        name_label.pack(side="left")
+
+        status_label = ctk.CTkLabel(
+            name_frame,
+            text=f"• {status}",
+            text_color=status_color
+        )
+        status_label.pack(side="left", padx=5)
+
+        # Image frame
         img_frame = ctk.CTkFrame(card, fg_color="transparent")
         img_frame.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
 
         try:
+            # Try to load cached image first
             if pokemon_data.sprite_url and os.path.exists(pokemon_data.sprite_url):
                 img = Image.open(pokemon_data.sprite_url)
             else:
+                # Fallback to default sprite
                 response = requests.get(DEFAULT_SPRITE_URL)
                 img = Image.open(BytesIO(response.content))
 
@@ -611,42 +709,85 @@ class ShinyCounter:
         except Exception as e:
             print(f"Error loading card image: {e}")
 
-        name_frame = ctk.CTkFrame(header, fg_color="transparent")
-        name_frame.pack(side="left")
-        ctk.CTkLabel(name_frame, text=pokemon_name.capitalize(), font=("Arial", 12, "bold")).pack(side="left")
-        ctk.CTkLabel(name_frame, text=f"• {status}", text_color=status_color).pack(side="left", padx=5)
-
+        # Details frame
         details = ctk.CTkFrame(card, fg_color="transparent")
         details.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
 
+        # Encounters
         formatted_number = "{:,}".format(pokemon_data.encounters)
-        ctk.CTkLabel(details, text=f"Encounters: {formatted_number}").grid(row=0, column=0, sticky="w")
+        encounters_label = ctk.CTkLabel(details, text=f"Encounters: {formatted_number}")
+        encounters_label.grid(row=0, column=0, sticky="w")
 
+        # Probability calculation
+        probability_label = None
         if pokemon_data.method:
             odds = self.calculate_shiny_odds(pokemon_data)
             probability = 1 - ((odds - 1) / odds) ** pokemon_data.encounters
-            ctk.CTkLabel(details, text=f"Shiny Chance: {probability:.2%} (1/{odds:,})").grid(row=1, column=0,
-                                                                                             sticky="w")
+            probability_label = ctk.CTkLabel(
+                details,
+                text=f"Shiny Chance: {probability:.2%} (1/{odds:,})"
+            )
+            probability_label.grid(row=1, column=0, sticky="w")
 
+        # Game information
+        game_label = None
         if pokemon_data.game:
-            ctk.CTkLabel(details, text=f"Game: {pokemon_data.game}").grid(row=2, column=0, sticky="w")
+            game_label = ctk.CTkLabel(details, text=f"Game: {pokemon_data.game}")
+            game_label.grid(row=2, column=0, sticky="w")
 
+        # Found date
+        found_date_label = None
         if status == "COMPLETE" and pokemon_data.found_date:
-            ctk.CTkLabel(details, text=f"Found: {pokemon_data.found_date}").grid(row=3, column=0, sticky="w")
+            found_date_label = ctk.CTkLabel(details, text=f"Found: {pokemon_data.found_date}")
+            found_date_label.grid(row=3, column=0, sticky="w")
 
+        # Action buttons
         buttons = ctk.CTkFrame(card, fg_color="transparent")
-        buttons.grid(row=2, column=0, columnspan=2, sticky="ew")
+        buttons.grid(row=2, column=0, columnspan=2, sticky="ew", padx=5, pady=5)
 
-        ctk.CTkButton(buttons, text="Load", command=lambda p=pokemon_name: self.load_pokemon(p), width=60).grid(row=0,
-                                                                                                                column=0,
-                                                                                                                padx=2)
-        ctk.CTkButton(buttons, text="Notes", command=lambda p=pokemon_name: self.add_notes(p), fg_color="#FFCB05",
-                      text_color="#2C3E50", width=60).grid(row=0, column=1, padx=2)
+        # Load button
+        load_btn = ctk.CTkButton(
+            buttons,
+            text="Load",
+            command=lambda p=pokemon_name: self.load_pokemon(p),
+            width=60
+        )
+        load_btn.grid(row=0, column=0, padx=2)
 
+        # Notes button
+        notes_btn = ctk.CTkButton(
+            buttons,
+            text="Notes",
+            command=lambda p=pokemon_name: self.add_notes(p),
+            fg_color="#FFCB05",
+            text_color="#2C3E50",
+            width=60
+        )
+        notes_btn.grid(row=0, column=1, padx=2)
+
+        # Status toggle button
         btn_text = "✓" if status == "COMPLETE" else "▶"
         btn_fg = "#28a745" if status == "COMPLETE" else "#3D7DCA"
-        ctk.CTkButton(buttons, text=btn_text, command=lambda p=pokemon_name: self.toggle_hunt_status(p),
-                      fg_color=btn_fg, width=60).grid(row=0, column=2, padx=2)
+        status_button = ctk.CTkButton(
+            buttons,
+            text=btn_text,
+            command=lambda p=pokemon_name: self.toggle_hunt_status(p),
+            fg_color=btn_fg,
+            width=60
+        )
+        status_button.grid(row=0, column=2, padx=2)
+
+        # Configure grid weights
+        card.grid_columnconfigure(0, weight=1)
+        card.grid_columnconfigure(1, weight=2)
+
+        # Store references to dynamic elements
+        card.encounters_label = encounters_label
+        card.probability_label = probability_label
+        card.status_label = status_label
+        card.game_label = game_label
+        card.found_date_label = found_date_label
+        card.status_button = status_button
 
         return card
 
