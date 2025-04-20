@@ -182,10 +182,10 @@
         },
         "murkrow": {
             "name": "murkrow",
-            "encounters": 3508,
-            "adjustment": 24,
+            "encounters": 3638,
+            "adjustment": 8,
             "sprite_url": "cache\\sprites\\murkrow_150x150.png",
-            "last_updated": "2025-04-18 21:16:23",
+            "last_updated": "2025-04-19 22:00:10",
             "status": "ACTIVE",
             "found_date": null,
             "game": "HeartGold/SoulSilver",
@@ -198,7 +198,7 @@
         "Murkrow",
         "murkrow"
     ],
-    "last_pokemon": "combee",
+    "last_pokemon": "murkrow",
     "theme": "dark",
     "sort_by": "most_recent",
     "sort_order": "descending"
