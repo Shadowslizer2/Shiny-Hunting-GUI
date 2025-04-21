@@ -157,9 +157,15 @@ class EmulatorController:
         Label(action_frame, text="Action Buttons").grid(row=0, column=0)
         Button(action_frame, text="Run Away", command=self.run_away_action,
                height=2, width=20).grid(row=1, column=0, padx=5, pady=5)
-        Label(action_frame, text="Action Buttons").grid(row=0, column=0)
         Button(action_frame, text="Spin", command=self.spin_action,
                height=2, width=20).grid(row=2, column=0, padx=5, pady=5)
+        Button(action_frame, text="Full Save", command=self.full_save,
+               height=2, width=20).grid(row=5, column=0, padx=5, pady=5)
+
+        Button(action_frame, text="Egg Laps", command=self.masuda_sequence,
+               height=2, width=20).grid(row=1, column=1, padx=5, pady=5)
+        Button(action_frame, text="Egg Collect", command=self.collect_egg,
+               height=2, width=20).grid(row=2, column=1, padx=5, pady=5)
 
         # Shoulder buttons (Top)
         shoulder_frame = Frame(ds_frame)
@@ -234,6 +240,18 @@ class EmulatorController:
         keyboard.release('g')
         keyboard.release('b')
         keyboard.release('v')
+        time.sleep(0.05)
+
+    def quick_save(self, hwnd):
+        """Perform quick save on specific window"""
+        win32gui.SetForegroundWindow(hwnd)
+        time.sleep(0.05)
+
+        keyboard.press('shift')
+        keyboard.press('f9')
+        time.sleep(0.1)
+        keyboard.release('shift')
+        keyboard.release('f9')
         time.sleep(0.05)
 
     def press_button(self, button_num, duration=0.2):
@@ -516,6 +534,113 @@ class EmulatorController:
             self.navigate_to_summary(6)
             self.trigger_shinyhunter_increment()
             self.update_status("Eevee sequence completed")
+        finally:
+            self.is_running = False
+
+    def full_save(self):
+        if self.is_running:
+            return
+
+        self.is_running = True
+        try:
+            num_emulators = self.num_emulators_var.get()
+            self.update_status(f"Starting Quick Save sequence for {num_emulators} emulators...")
+            self.update_emulator_count_file()
+            self.find_melonds_windows()
+
+            if not windows:
+                messagebox.showwarning("Warning", "No melonDS windows found")
+                return
+
+            # Quick Save
+            j = 1
+            alpha = 'abcdefghijklmnopqrstuvwxyz'
+            self.update_status("Performing quick save...")
+            for hwnd in windows:
+                self.quick_save(hwnd)
+                time.sleep(.1)
+                keyboard.press_and_release((alpha[:j])[-1:])
+                time.sleep(.1)
+                keyboard.press_and_release('Enter')
+                time.sleep(.1)
+                keyboard.press_and_release('Left')
+                time.sleep(.1)
+                keyboard.press_and_release('Enter')
+                time.sleep(.1)
+                j = j + 1
+
+            self.update_status("Full Save sequence completed")
+        finally:
+            self.is_running = False
+
+    def collect_egg(self):
+        if self.is_running:
+            return
+
+        self.is_running = True
+        try:
+            num_emulators = self.num_emulators_var.get()
+            self.update_status(f"Starting Collect Egg sequence for {num_emulators} emulators...")
+            self.update_emulator_count_file()
+            self.find_melonds_windows()
+
+            if not windows:
+                messagebox.showwarning("Warning", "No melonDS windows found")
+                return
+
+            self.press_y()
+            time.sleep(.5)
+            for i in range(2):
+                self.move_up()
+                time.sleep(.15)
+            for i in range(5):
+                self.move_right()
+                time.sleep(.15)
+            self.press_a()
+            time.sleep(.1)
+            self.press_a()
+            time.sleep(1.5)
+            self.press_a()
+            time.sleep(.5)
+            self.press_a()
+            time.sleep(1)
+            self.press_a()
+            time.sleep(1)
+            self.press_a()
+            time.sleep(6)
+            self.press_a()
+            time.sleep(.1)
+            for i in range(5):
+                self.move_left()
+                time.sleep(.15)
+            self.press_y()
+
+            self.update_status("Collect Egg sequence completed")
+        finally:
+            self.is_running = False
+
+    def masuda_sequence(self):
+        if self.is_running:
+            return
+
+        self.is_running = True
+        try:
+            num_emulators = self.num_emulators_var.get()
+            self.update_status(f"Starting Masuda sequence for {num_emulators} emulators...")
+            self.update_emulator_count_file()
+            self.find_melonds_windows()
+
+            if not windows:
+                messagebox.showwarning("Warning", "No melonDS windows found")
+                return
+
+            k = 10
+            for i in range(k):
+                self.update_status(f"Hatching egg {k-i} Laps left")
+                self.hold_up(6.5)
+                self.hold_down(6.5)
+
+            self.update_status("Masuda sequence completed")
         finally:
             self.is_running = False
 
