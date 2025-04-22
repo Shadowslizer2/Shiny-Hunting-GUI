@@ -160,12 +160,17 @@ class EmulatorController:
         Button(action_frame, text="Spin", command=self.spin_action,
                height=2, width=20).grid(row=2, column=0, padx=5, pady=5)
         Button(action_frame, text="Full Save", command=self.full_save,
-               height=2, width=20).grid(row=5, column=0, padx=5, pady=5)
+               height=2, width=20).grid(row=3, column=0, padx=5, pady=5)
 
-        Button(action_frame, text="Egg Laps", command=self.masuda_sequence,
-               height=2, width=20).grid(row=1, column=1, padx=5, pady=5)
+        self.egg_lapse_button = Button(action_frame, text="Biking Egg Laps", command=self.toggle_egg_lapse,
+                                       height=2, width=20, bg='#ffd3b6', fg='black')
+        self.egg_lapse_button.grid(row=1, column=1, padx=5, pady=5)
+        self.egg_state = False
+        self.egg_running = False
         Button(action_frame, text="Egg Collect", command=self.collect_egg,
                height=2, width=20).grid(row=2, column=1, padx=5, pady=5)
+        Button(action_frame, text="Full Load", command=self.full_load,
+               height=2, width=20).grid(row=3, column=1, padx=5, pady=5)
 
         # Shoulder buttons (Top)
         shoulder_frame = Frame(ds_frame)
@@ -240,6 +245,16 @@ class EmulatorController:
         keyboard.release('g')
         keyboard.release('b')
         keyboard.release('v')
+        time.sleep(0.05)
+
+    def quick_load(self, hwnd):
+        """Perform quick save on specific window"""
+        win32gui.SetForegroundWindow(hwnd)
+        time.sleep(0.05)
+
+        keyboard.press('f9')
+        time.sleep(0.1)
+        keyboard.release('f9')
         time.sleep(0.05)
 
     def quick_save(self, hwnd):
@@ -537,6 +552,46 @@ class EmulatorController:
         finally:
             self.is_running = False
 
+    def full_load(self):
+        if self.is_running:
+            return
+
+        self.is_running = True
+        try:
+            num_emulators = self.num_emulators_var.get()
+            self.update_status(f"Starting Quick Save sequence for {num_emulators} emulators...")
+            self.update_emulator_count_file()
+            self.find_melonds_windows()
+
+            if not windows:
+                messagebox.showwarning("Warning", "No melonDS windows found")
+                return
+
+            # Quick Save
+            j = 1
+            alpha = 'abcdefghijklmnopqrstuvwxyz'
+            self.update_status("Performing quick load...")
+            for hwnd in windows:
+                self.quick_load(hwnd)
+                time.sleep(.1)
+                keyboard.press_and_release((alpha[:j])[-1:])
+                time.sleep(.1)
+                keyboard.press_and_release('.')
+                time.sleep(.1)
+                keyboard.press_and_release('m')
+                time.sleep(.1)
+                keyboard.press_and_release('l')
+                time.sleep(.1)
+                keyboard.press_and_release('n')
+                time.sleep(.1)
+                keyboard.press_and_release('Enter')
+                time.sleep(.1)
+                j = j + 1
+
+            self.update_status("Full Save sequence completed")
+        finally:
+            self.is_running = False
+
     def full_save(self):
         if self.is_running:
             return
@@ -558,7 +613,7 @@ class EmulatorController:
             self.update_status("Performing quick save...")
             for hwnd in windows:
                 self.quick_save(hwnd)
-                time.sleep(.1)
+                time.sleep(.25)
                 keyboard.press_and_release((alpha[:j])[-1:])
                 time.sleep(.1)
                 keyboard.press_and_release('Enter')
@@ -589,7 +644,7 @@ class EmulatorController:
                 return
 
             self.press_y()
-            time.sleep(.5)
+            time.sleep(.75)
             for i in range(2):
                 self.move_up()
                 time.sleep(.15)
@@ -619,30 +674,39 @@ class EmulatorController:
         finally:
             self.is_running = False
 
-    def masuda_sequence(self):
-        if self.is_running:
-            return
+    def toggle_egg_lapse(self):
+        """Toggle Egg Lapse state"""
+        self.egg_state = not self.egg_state
+        self.egg_lapse_button.config(bg='#dcedc1' if self.egg_state else '#ffd3b6')
+        self.update_status(f"Biking Egg Laps {'ON' if self.egg_state else 'OFF'}")
 
-        self.is_running = True
-        try:
-            num_emulators = self.num_emulators_var.get()
-            self.update_status(f"Starting Masuda sequence for {num_emulators} emulators...")
-            self.update_emulator_count_file()
-            self.find_melonds_windows()
+        if self.egg_state:
+            self.start_egg_lapse()
+        else:
+            self.egg_running = False  # This will stop the sequence
 
-            if not windows:
-                messagebox.showwarning("Warning", "No melonDS windows found")
-                return
+    def start_egg_lapse(self):
+        """Start the egg lapse sequence in a separate thread"""
+        if not self.egg_running and self.egg_state:
+            self.egg_running = True
+            import threading
+            thread = threading.Thread(target=self.run_egg_lapse)
+            thread.daemon = True
+            thread.start()
 
-            k = 10
-            for i in range(k):
-                self.update_status(f"Hatching egg {k-i} Laps left")
-                self.hold_up(6.5)
-                self.hold_down(6.5)
+    def run_egg_lapse(self):
+        """Run the egg lapse sequence"""
+        while self.egg_running and self.egg_state:
+            self.update_status("Biking Egg Laps: Holding Up")
+            self.hold_up(6.5)
+            if not self.egg_running or not self.egg_state:
+                break
+            self.update_status("Biking Egg Laps: Holding Down")
+            self.hold_down(6.5)
 
-            self.update_status("Masuda sequence completed")
-        finally:
-            self.is_running = False
+        # When stopped, reset axes
+        self.reset_axes()
+        self.update_status("Biking Egg Laps stopped")
 
     def sudowoodo_sequence(self):
         if self.is_running:

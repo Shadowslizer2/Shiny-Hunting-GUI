@@ -206,10 +206,10 @@
         },
         "phione": {
             "name": "phione",
-            "encounters": 260,
+            "encounters": 870,
             "adjustment": 24,
             "sprite_url": "cache\\sprites\\phione_150x150.png",
-            "last_updated": "2025-04-20 22:36:33",
+            "last_updated": "2025-04-21 16:12:54",
             "status": "ACTIVE",
             "found_date": null,
             "game": "HeartGold/SoulSilver",
