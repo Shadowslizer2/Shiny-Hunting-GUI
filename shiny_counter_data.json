@@ -218,12 +218,14 @@
         }
     },
     "active_hunts": [
-        "combee",
+        "omanyte",
         "murkrow",
+        "combee",
         "growlithe",
         "Murkrow",
         "Growlithe",
-        "Phione"
+        "Phione",
+        "Omanyte"
     ],
     "last_pokemon": "phione",
     "theme": "dark",
