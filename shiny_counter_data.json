@@ -206,19 +206,18 @@
         },
         "phione": {
             "name": "phione",
-            "encounters": 870,
+            "encounters": 968,
             "adjustment": 24,
             "sprite_url": "cache\\sprites\\phione_150x150.png",
-            "last_updated": "2025-04-21 16:12:54",
-            "status": "ACTIVE",
-            "found_date": null,
+            "last_updated": "2025-04-21 19:46:00",
+            "status": "COMPLETE",
+            "found_date": "2025-04-21 20:06:02",
             "game": "HeartGold/SoulSilver",
             "notes": null,
             "method": "Masuda Method"
         }
     },
     "active_hunts": [
-        "phione",
         "combee",
         "murkrow",
         "growlithe",
