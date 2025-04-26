@@ -10,7 +10,9 @@
             "found_date": "2025-03-28 12:59:10",
             "game": "HeartGold/SoulSilver",
             "notes": null,
-            "method": "Soft Reset"
+            "method": "Soft Reset",
+            "phase": 1,
+            "target": null
         },
         "chikorita": {
             "name": "chikorita",
@@ -22,7 +24,9 @@
             "found_date": "2025-03-22 20:30:00",
             "game": "HeartGold/SoulSilver",
             "notes": "Most likely had rng clones so # would be lower",
-            "method": "Soft Reset"
+            "method": "Soft Reset",
+            "phase": 1,
+            "target": null
         },
         "rattata": {
             "name": "rattata",
@@ -34,7 +38,9 @@
             "found_date": "2025-03-23 23:30:00",
             "game": "HeartGold/SoulSilver",
             "notes": "Most likely had rng clones so # would be lower",
-            "method": "Random Encounter"
+            "method": "Random Encounter",
+            "phase": 1,
+            "target": null
         },
         "dratini": {
             "name": "dratini",
@@ -46,7 +52,9 @@
             "found_date": "2025-03-24 10:30:00",
             "game": "HeartGold/SoulSilver",
             "notes": "Most likely had rng clones so # would be lower. There were 2 shinies when this was found",
-            "method": "Soft Reset"
+            "method": "Soft Reset",
+            "phase": 1,
+            "target": null
         },
         "nidoran-m": {
             "name": "nidoran-m",
@@ -58,7 +66,9 @@
             "found_date": "2025-03-30 12:58:24",
             "game": "HeartGold/SoulSilver",
             "notes": null,
-            "method": "Random Encounter"
+            "method": "Random Encounter",
+            "phase": 1,
+            "target": null
         },
         "electrode": {
             "name": "electrode",
@@ -70,7 +80,9 @@
             "found_date": "2025-04-01 08:54:29",
             "game": "HeartGold/SoulSilver",
             "notes": null,
-            "method": "Soft Reset"
+            "method": "Soft Reset",
+            "phase": 1,
+            "target": null
         },
         "eevee": {
             "name": "eevee",
@@ -82,7 +94,9 @@
             "found_date": "2025-04-07 18:44:05",
             "game": "HeartGold/SoulSilver",
             "notes": null,
-            "method": "Soft Reset"
+            "method": "Soft Reset",
+            "phase": 1,
+            "target": null
         },
         "ho-oh": {
             "name": "ho-oh",
@@ -94,7 +108,9 @@
             "found_date": "2025-04-08 09:18:55",
             "game": "HeartGold/SoulSilver",
             "notes": null,
-            "method": "Soft Reset"
+            "method": "Soft Reset",
+            "phase": 1,
+            "target": null
         },
         "snorlax": {
             "name": "snorlax",
@@ -106,7 +122,9 @@
             "found_date": "2025-04-10 17:46:52",
             "game": "HeartGold/SoulSilver",
             "notes": null,
-            "method": "Random Encounter"
+            "method": "Random Encounter",
+            "phase": 1,
+            "target": null
         },
         "suicune": {
             "name": "suicune",
@@ -118,7 +136,9 @@
             "found_date": "2025-04-11 08:12:27",
             "game": "HeartGold/SoulSilver",
             "notes": null,
-            "method": "Soft Reset"
+            "method": "Soft Reset",
+            "phase": 1,
+            "target": null
         },
         "anorith": {
             "name": "anorith",
@@ -130,10 +150,12 @@
             "found_date": "2025-04-12 15:46:59",
             "game": "HeartGold/SoulSilver",
             "notes": null,
-            "method": "Soft Reset"
+            "method": "Soft Reset",
+            "phase": 1,
+            "target": null
         },
-        "slakoth": {
-            "name": "slakoth",
+        "slakoth phase 1": {
+            "name": "slakoth phase 1",
             "encounters": 5764,
             "adjustment": 24,
             "sprite_url": "cache\\sprites\\slakoth_150x150.png",
@@ -142,19 +164,23 @@
             "found_date": "2025-04-15 10:13:21",
             "game": "HeartGold/SoulSilver",
             "notes": null,
-            "method": "Soft Reset"
+            "method": "Soft Reset",
+            "phase": 1,
+            "target": "combee"
         },
-        "combee": {
-            "name": "combee",
+        "slakoth phase 2": {
+            "name": "slakoth phase 2",
             "encounters": 3528,
             "adjustment": 24,
-            "sprite_url": "cache\\sprites\\combee_150x150.png",
+            "sprite_url": "cache\\sprites\\slakoth_150x150.png",
             "last_updated": "2025-04-26 17:00:32",
-            "status": "ACTIVE",
-            "found_date": null,
+            "status": "COMPLETE",
+            "found_date": "2025-04-26 17:00:32",
             "game": "HeartGold/SoulSilver",
             "notes": null,
-            "method": "Soft Reset"
+            "method": "Soft Reset",
+            "phase": 2,
+            "target": "combee"
         },
         "slugma": {
             "name": "slugma",
@@ -166,7 +192,9 @@
             "found_date": "2025-04-16 20:30:37",
             "game": "HeartGold/SoulSilver",
             "notes": "Unique Ambitious hunt where I hatch an egg from Primo at Full Odds, Started 4/15",
-            "method": "Soft Reset"
+            "method": "Soft Reset",
+            "phase": 1,
+            "target": null
         },
         "steelix": {
             "name": "steelix",
@@ -178,7 +206,9 @@
             "found_date": "2025-04-17 20:08:31",
             "game": "HeartGold/SoulSilver",
             "notes": null,
-            "method": "Random Encounter"
+            "method": "Random Encounter",
+            "phase": 1,
+            "target": null
         },
         "murkrow": {
             "name": "murkrow",
@@ -190,7 +220,9 @@
             "found_date": null,
             "game": "HeartGold/SoulSilver",
             "notes": null,
-            "method": "Random Encounter"
+            "method": "Random Encounter",
+            "phase": 1,
+            "target": null
         },
         "growlithe": {
             "name": "growlithe",
@@ -202,7 +234,9 @@
             "found_date": "2025-04-20 00:54:39",
             "game": "HeartGold/SoulSilver",
             "notes": null,
-            "method": "Random Encounter"
+            "method": "Random Encounter",
+            "phase": 1,
+            "target": null
         },
         "phione": {
             "name": "phione",
@@ -214,7 +248,9 @@
             "found_date": "2025-04-21 20:06:02",
             "game": "HeartGold/SoulSilver",
             "notes": null,
-            "method": "Masuda Method"
+            "method": "Masuda Method",
+            "phase": 1,
+            "target": null
         },
         "omanyte": {
             "name": "omanyte",
@@ -226,17 +262,29 @@
             "found_date": "2025-04-25 07:45:15",
             "game": "HeartGold/SoulSilver",
             "notes": null,
-            "method": "Soft Reset"
+            "method": "Soft Reset",
+            "phase": 1,
+            "target": null
+        },
+        "combee": {
+            "name": "combee",
+            "encounters": 0,
+            "adjustment": 24,
+            "sprite_url": "cache\\sprites\\combee_150x150.png",
+            "last_updated": "2025-04-26 18:14:01",
+            "status": "ACTIVE",
+            "found_date": null,
+            "game": "HeartGold/SoulSilver",
+            "notes": null,
+            "method": "Random Encounter",
+            "phase": 3,
+            "target": null
         }
     },
     "active_hunts": [
         "combee",
         "murkrow",
-        "growlithe",
-        "Murkrow",
-        "Growlithe",
-        "Phione",
-        "Omanyte"
+        "Combee"
     ],
     "last_pokemon": "combee",
     "theme": "dark",

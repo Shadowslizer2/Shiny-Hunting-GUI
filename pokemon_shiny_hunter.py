@@ -26,11 +26,13 @@ class PokemonData:
     adjustment: int = 1
     sprite_url: Optional[str] = None
     last_updated: Optional[str] = None
-    status: str = "ACTIVE"
+    status: str = "ACTIVE"  # Can be ACTIVE, COMPLETE, PAUSED, or PHASE
     found_date: Optional[str] = None
     game: Optional[str] = None
     notes: Optional[str] = None
     method: Optional[str] = None
+    phase: int = 1
+    target: Optional[str] = None
 
 
 @dataclass
@@ -218,6 +220,8 @@ class ShinyCounter:
             side="left", expand=True)
         ctk.CTkButton(button_frame, text="Reset", command=lambda: self.adjust_number("reset"), fg_color="#FFCB05",
                       text_color="#2C3E50", width=40).pack(side="left", expand=True)
+        ctk.CTkButton(button_frame, text="Phase", command=lambda: self.handle_phase_input(),
+                      fg_color="#FFCB05", text_color="#2C3E50", width=40).pack(side="left", expand=True)
 
         # Right panel (hunts) with proper background
         hunts_panel = ctk.CTkFrame(self.main_frame, corner_radius=0)
@@ -227,6 +231,9 @@ class ShinyCounter:
         header_frame = ctk.CTkFrame(hunts_panel, fg_color="transparent")
         header_frame.pack(fill="x", pady=5)
         ctk.CTkLabel(header_frame, text="Shiny Hunts", font=("Arial", 14, "bold")).pack(side="left")
+        self.note_filter_entry = ctk.CTkEntry(header_frame, placeholder_text="Filter notes...")
+        self.note_filter_entry.pack(side="right", padx=10)
+        self.note_filter_entry.bind("<KeyRelease>", lambda e: self.update_hunts_panel())
 
         # Filter buttons
         filter_frame = ctk.CTkFrame(header_frame, fg_color="transparent")
@@ -236,6 +243,8 @@ class ShinyCounter:
         ctk.CTkButton(filter_frame, text="Active", command=lambda: self.set_filter("active"), width=60).pack(
             side="left", padx=2)
         ctk.CTkButton(filter_frame, text="Completed", command=lambda: self.set_filter("complete"), width=60).pack(
+            side="left", padx=2)
+        ctk.CTkButton(filter_frame, text="Phases", command=lambda: self.set_filter("phase"), width=60).pack(
             side="left", padx=2)
 
         # Sort controls
@@ -300,6 +309,11 @@ class ShinyCounter:
                     pokemon_dict = {}
                     for k, v in loaded_data.get('pokemon', {}).items():
                         try:
+                            # Handle missing fields for backward compatibility
+                            if 'phase' not in v:
+                                v['phase'] = 1
+                            if 'target' not in v:
+                                v['target'] = None
                             pokemon_dict[k] = PokemonData(**v)
                         except Exception as e:
                             print(f"Skipping invalid Pokémon entry {k}: {e}")
@@ -326,7 +340,15 @@ class ShinyCounter:
             self.saved_data.sort_by = self.sort_by.get()
             self.saved_data.sort_order = self.sort_order.get()
             data = {
-                "pokemon": {k: asdict(v) for k, v in self.saved_data.pokemon.items()},
+                "pokemon": {
+                    k: {
+                        **asdict(v),
+                        # Ensure phase and target are always included
+                        "phase": getattr(v, 'phase', 1),
+                        "target": getattr(v, 'target', None)
+                    }
+                    for k, v in self.saved_data.pokemon.items()
+                },
                 "active_hunts": self.saved_data.active_hunts,
                 "last_pokemon": self.saved_data.last_pokemon,
                 "theme": self.saved_data.theme,
@@ -339,6 +361,12 @@ class ShinyCounter:
             messagebox.showerror("Error", f"Could not save data: {e}")
 
     def load_pokemon(self, pokemon_name):
+        base_name = pokemon_name.split(" phase ")[0].lower()
+        if any(c.isdigit() for c in pokemon_name):
+            phase = int(pokemon_name.split()[-1])
+        else:
+            phase = 1
+
         try:
             pokemon_name = pokemon_name.lower()
             self.current_pokemon = pokemon_name
@@ -366,13 +394,16 @@ class ShinyCounter:
             messagebox.showerror("Error", f"Couldn't load Pokémon: {e}")
 
     def load_pokemon_image(self, pokemon_name, size=Config.MAIN_SPRITE_SIZE):
+        # Extract base name for phases (remove " phase X" suffix)
+        base_name = pokemon_name.split(" phase ")[0].lower()
+
         try:
-            cache_file = CACHE_DIR / f"{pokemon_name.lower()}_{size[0]}x{size[1]}.png"
+            cache_file = CACHE_DIR / f"{base_name}_{size[0]}x{size[1]}.png"
 
             if cache_file.exists():
                 img = Image.open(cache_file)
             else:
-                response = requests.get(f"{Config.API_BASE_URL}/pokemon/{pokemon_name.lower()}")
+                response = requests.get(f"{Config.API_BASE_URL}/pokemon/{base_name}")
                 data = response.json()
                 sprite_url = data['sprites']['front_shiny'] or data['sprites']['front_default']
                 response = requests.get(sprite_url)
@@ -397,6 +428,50 @@ class ShinyCounter:
             self.pokemon_label.configure(image=ctk_img)
             self.pokemon_label.image = ctk_img
 
+    def get_next_phase_number(self, target_name):
+        target_name = target_name.lower()
+        phases = [p for p in self.saved_data.pokemon.values()
+                  if p.target and p.target.lower() == target_name]
+        return len(phases) + 1
+
+    def handle_phase(self, phased_pokemon):
+        if not self.current_pokemon:
+            return
+
+        # Create new phase entry
+        base_name = phased_pokemon.lower()
+        # Get all phases for current target (including other targets)
+        all_phases = [p for p in self.saved_data.pokemon.values()
+                      if p.target and p.target.lower() == self.current_pokemon.lower()]
+
+        # Calculate next phase number
+        phase_number = len(all_phases) + 1
+
+        new_name = f"{base_name} phase {phase_number}"
+
+        # Create COMPLETED phase entry (never modified again)
+        self.saved_data.pokemon[new_name] = PokemonData(
+            name=new_name,
+            encounters=self.current_number,  # Frozen at current count
+            adjustment=self.default_adjustment,
+            game=self.current_game.get(),
+            method=self.current_method.get(),
+            last_updated=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            status="COMPLETE",  # Marked complete immediately
+            found_date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),  # Save found date
+            phase=phase_number,
+            target=self.current_pokemon  # Links back to main hunt
+        )
+
+        # Update main hunt's phase counter only (don't reset encounters)
+        if self.current_pokemon in self.saved_data.pokemon:
+            current_data = self.saved_data.pokemon[self.current_pokemon]
+            current_data.phase = phase_number + 1  # Increment phase counter
+            current_data.last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        self.save_data()
+        self.update_hunts_panel()
+
     def update_hunt_card(self, pokemon_name, pokemon_data):
         card = self.hunt_cards[pokemon_name]
 
@@ -404,7 +479,8 @@ class ShinyCounter:
         status_color = {
             "COMPLETE": "#28a745",
             "PAUSED": "#e74c3c",
-            "ACTIVE": "#3D7DCA"
+            "ACTIVE": "#3D7DCA",
+            "PHASE": "#FFA500"  # Add orange color for phases
         }.get(pokemon_data.status, "#3D7DCA")
         card.status_label.configure(
             text=f"• {pokemon_data.status}",
@@ -534,6 +610,9 @@ class ShinyCounter:
         adjustment = int(self.amount_entry.get()) if self.amount_entry.get().isdigit() else 1
 
         if self.current_pokemon not in self.saved_data.pokemon:
+            # Add this line to get the correct starting phase number
+            initial_phase = self.get_next_phase_number(self.current_pokemon)
+
             self.saved_data.pokemon[self.current_pokemon] = PokemonData(
                 name=self.current_pokemon,
                 encounters=self.current_number,
@@ -541,7 +620,8 @@ class ShinyCounter:
                 game=self.current_game.get(),
                 method=self.current_method.get(),
                 last_updated=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                status="ACTIVE"
+                status="ACTIVE",
+                phase=initial_phase  # Use the calculated phase number here
             )
         else:
             data = self.saved_data.pokemon[self.current_pokemon]
@@ -664,17 +744,32 @@ class ShinyCounter:
 
     def filter_hunts(self):
         filter_type = self.current_filter.get()
+        note_filter = self.note_filter_entry.get().lower()
+
         return [
             p for p in self.saved_data.pokemon.values()
             if (filter_type == "all" or
                 (filter_type == "active" and p.status == "ACTIVE") or
-                (filter_type == "complete" and p.status == "COMPLETE"))
+                (filter_type == "complete" and p.status == "COMPLETE") or
+                (filter_type == "paused" and p.status == "PAUSED") or
+                (filter_type == "phase" and p.status == "PHASE"))
+               and (not note_filter or
+                    (p.notes and note_filter in p.notes.lower()) or
+                    (p.target and note_filter in p.target.lower()) or
+                    (p.name and note_filter in p.name.lower()))
         ]
 
     def get_sort_key(self, data):
         if self.sort_by.get() == "most_recent":
             return datetime.strptime(data.last_updated, "%Y-%m-%d %H:%M:%S") if data.last_updated else datetime.min
         return data.encounters
+
+    def handle_phase_input(self):
+        phased_pokemon = simpledialog.askstring("New Phase",
+                                                "Enter the Pokémon you phased on:",
+                                                parent=self.root)
+        if phased_pokemon:
+            self.handle_phase(phased_pokemon)
 
     def create_hunt_card(self, pokemon_name, pokemon_data):
         card = ctk.CTkFrame(self.hunts_frame)
@@ -697,6 +792,7 @@ class ShinyCounter:
             corner_radius=10
         )
 
+
         # Header with name and status
         header = ctk.CTkFrame(card, fg_color="transparent")
         header.grid(row=0, column=0, columnspan=2, sticky="ew", padx=5, pady=5)
@@ -705,16 +801,23 @@ class ShinyCounter:
         name_frame = ctk.CTkFrame(header, fg_color="transparent")
         name_frame.pack(side="left", fill="x", expand=True)
 
+        name_text = pokemon_name.split()[0].capitalize()
+        if pokemon_data.phase > 1:
+            name_text += f" (Phase {pokemon_data.phase})"
+        if pokemon_data.target:
+            name_text += f" → {pokemon_data.target.capitalize()}"
+
         name_label = ctk.CTkLabel(
             name_frame,
-            text=pokemon_name.capitalize(),
+            text=name_text,
             font=("Arial", 12, "bold")
         )
         name_label.pack(side="left")
 
+        display_status = f"Phase {pokemon_data.phase}" if pokemon_data.target else status
         status_label = ctk.CTkLabel(
             name_frame,
-            text=f"• {status}",
+            text=f"• {display_status}",
             text_color=status_color
         )
         status_label.pack(side="left", padx=5)
@@ -827,20 +930,19 @@ class ShinyCounter:
         pokemon_name = pokemon_name.lower()
         if pokemon_name in self.saved_data.pokemon:
             current_status = self.saved_data.pokemon[pokemon_name].status
-            new_status = "COMPLETE" if current_status != "COMPLETE" else "ACTIVE"
+            # New status cycle including PHASE
+            status_cycle = {
+                "ACTIVE": "COMPLETE",
+                "COMPLETE": "PAUSED",
+                "PAUSED": "ACTIVE",
+                "PHASE": "COMPLETE"
+            }
+            new_status = status_cycle.get(current_status, "ACTIVE")
+
             self.saved_data.pokemon[pokemon_name].status = new_status
 
             if new_status == "COMPLETE" and not self.saved_data.pokemon[pokemon_name].found_date:
                 self.saved_data.pokemon[pokemon_name].found_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-            self.save_data()
-
-            if new_status == "ACTIVE":
-                if pokemon_name not in self.saved_data.active_hunts:
-                    self.saved_data.active_hunts.append(pokemon_name)
-            else:
-                if pokemon_name in self.saved_data.active_hunts:
-                    self.saved_data.active_hunts.remove(pokemon_name)
 
             self.save_data()
             self.update_hunts_panel()
