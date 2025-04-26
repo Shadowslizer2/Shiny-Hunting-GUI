@@ -146,10 +146,10 @@
         },
         "combee": {
             "name": "combee",
-            "encounters": 432,
+            "encounters": 2040,
             "adjustment": 24,
             "sprite_url": "cache\\sprites\\combee_150x150.png",
-            "last_updated": "2025-04-17 23:07:51",
+            "last_updated": "2025-04-26 15:07:52",
             "status": "ACTIVE",
             "found_date": null,
             "game": "HeartGold/SoulSilver",
@@ -215,19 +215,30 @@
             "game": "HeartGold/SoulSilver",
             "notes": null,
             "method": "Masuda Method"
+        },
+        "omanyte": {
+            "name": "omanyte",
+            "encounters": 6600,
+            "adjustment": 24,
+            "sprite_url": "cache\\sprites\\omanyte_150x150.png",
+            "last_updated": "2025-04-25 07:43:43",
+            "status": "COMPLETE",
+            "found_date": "2025-04-25 07:45:15",
+            "game": "HeartGold/SoulSilver",
+            "notes": null,
+            "method": "Soft Reset"
         }
     },
     "active_hunts": [
-        "omanyte",
-        "murkrow",
         "combee",
+        "murkrow",
         "growlithe",
         "Murkrow",
         "Growlithe",
         "Phione",
         "Omanyte"
     ],
-    "last_pokemon": "phione",
+    "last_pokemon": "combee",
     "theme": "dark",
     "sort_by": "most_encounters",
     "sort_order": "descending"

@@ -425,7 +425,8 @@ class EmulatorController:
 
     def test_inputs(self):
         """Test button that taps left twice"""
-        self.hold_right(duration=4)
+        time.sleep(5)
+        self.press_button(9)
 
     def execute_soft_reset(self):
         """Standard soft reset sequence"""
@@ -487,7 +488,7 @@ class EmulatorController:
         # Calculate moves based on slot position
         moves = []
         if slot == 6:
-            moves = ['left', 'up', 'right']
+            moves = ['up', 'left']
         elif slot == 5:
             moves = ['left', 'up']
         elif slot == 4:
@@ -544,8 +545,7 @@ class EmulatorController:
             self.press_a()
             time.sleep(0.5)
             self.press_a()
-
-            # Check summary
+            time.sleep(1)
             self.navigate_to_summary(6)
             self.trigger_shinyhunter_increment()
             self.update_status("Eevee sequence completed")
@@ -1025,25 +1025,8 @@ class EmulatorController:
             self.press_a()
             time.sleep(6)
             self.press_b()
-
-            # Check summary
             time.sleep(1)
-            self.press_x()
-            time.sleep(0.1)
-            self.tap_down()
-            time.sleep(0.1)
-            self.press_a()
-            time.sleep(1.25)
-            self.tap_up()
-            time.sleep(0.1)
-            self.tap_left()
-            time.sleep(0.1)
-            self.tap_right()
-            time.sleep(0.1)
-            self.press_a()
-            time.sleep(0.25)
-            self.press_a()
-
+            self.navigate_to_summary(6)
             self.trigger_shinyhunter_increment()
             self.update_status("Fossil sequence completed")
         finally:
