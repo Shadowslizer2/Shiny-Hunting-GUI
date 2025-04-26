@@ -146,10 +146,10 @@
         },
         "combee": {
             "name": "combee",
-            "encounters": 2040,
+            "encounters": 3528,
             "adjustment": 24,
             "sprite_url": "cache\\sprites\\combee_150x150.png",
-            "last_updated": "2025-04-26 15:07:52",
+            "last_updated": "2025-04-26 17:00:32",
             "status": "ACTIVE",
             "found_date": null,
             "game": "HeartGold/SoulSilver",
