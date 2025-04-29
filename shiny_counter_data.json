@@ -293,16 +293,32 @@
             "method": "Random Encounter",
             "phase": 4,
             "target": null
+        },
+        "snubbull": {
+            "name": "snubbull",
+            "encounters": 4632,
+            "adjustment": 24,
+            "sprite_url": "cache\\sprites\\snubbull_150x150.png",
+            "last_updated": "2025-04-29 14:46:53",
+            "status": "ACTIVE",
+            "found_date": null,
+            "game": "HeartGold/SoulSilver",
+            "notes": null,
+            "method": "Random Encounter",
+            "phase": 1,
+            "target": null
         }
     },
     "active_hunts": [
+        "snubbull",
+        "murkrow",
         "combee",
         "slakoth phase 3",
         "slakoth phase 1",
-        "murkrow",
-        "Combee"
+        "Combee",
+        "Snubbull"
     ],
-    "last_pokemon": "combee",
+    "last_pokemon": "snubbull",
     "theme": "dark",
     "sort_by": "most_recent",
     "sort_order": "descending"
