@@ -279,17 +279,31 @@
             "method": "Soft Reset",
             "phase": 1,
             "target": null
+        },
+        "combee": {
+            "name": "combee",
+            "encounters": 312,
+            "adjustment": 24,
+            "sprite_url": "cache\\sprites\\combee_150x150.png",
+            "last_updated": "2025-04-27 16:30:41",
+            "status": "COMPLETE",
+            "found_date": "2025-04-27 16:33:14",
+            "game": "HeartGold/SoulSilver",
+            "notes": null,
+            "method": "Random Encounter",
+            "phase": 4,
+            "target": null
         }
     },
     "active_hunts": [
+        "combee",
         "slakoth phase 3",
         "slakoth phase 1",
-        "combee",
         "murkrow",
         "Combee"
     ],
     "last_pokemon": "combee",
     "theme": "dark",
-    "sort_by": "most_encounters",
+    "sort_by": "most_recent",
     "sort_order": "descending"
 }
